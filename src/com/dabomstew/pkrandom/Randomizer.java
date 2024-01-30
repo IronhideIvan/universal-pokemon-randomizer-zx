@@ -734,11 +734,11 @@ public class Randomizer {
         for (int i = 0; i < size; i++) {
             IngameTrade oldT = oldTrades.get(i);
             IngameTrade newT = newTrades.get(i);
-            log.printf("Trade %-11s -> %-11s the %-11s        ->      %-11s -> %-15s the %s" + NEWLINE,
+            log.printf("Trade %-11s -> %-11s the %-11s [ITEM=%s]        ->      %-11s -> %-15s the %s [ITEM=%s]" + NEWLINE,
                     oldT.requestedPokemon != null ? oldT.requestedPokemon.fullName() : "Any",
-                    oldT.nickname, oldT.givenPokemon.fullName(),
+                    oldT.nickname, oldT.givenPokemon.fullName(), oldT.item,
                     newT.requestedPokemon != null ? newT.requestedPokemon.fullName() : "Any",
-                    newT.nickname, newT.givenPokemon.fullName());
+                    newT.nickname, newT.givenPokemon.fullName(), newT.item);
         }
         log.println();
     }
