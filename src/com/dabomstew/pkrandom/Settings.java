@@ -106,6 +106,8 @@ public class Settings {
     private StartersMod startersMod = StartersMod.UNCHANGED;
     private boolean allowStarterAltFormes;
 
+    private boolean forceUniqueStarterTypes;
+
     // index in the rom's list of pokemon
     // offset from the dropdown index from RandomizerGUI by 1
     private int[] customStarters = new int[3];
@@ -386,7 +388,7 @@ public class Settings {
         // 4: starter pokemon stuff
         out.write(makeByteSelected(startersMod == StartersMod.CUSTOM, startersMod == StartersMod.COMPLETELY_RANDOM,
                 startersMod == StartersMod.UNCHANGED, startersMod == StartersMod.RANDOM_WITH_TWO_EVOLUTIONS,
-                randomizeStartersHeldItems, banBadRandomStarterHeldItems, allowStarterAltFormes));
+                randomizeStartersHeldItems, banBadRandomStarterHeldItems, allowStarterAltFormes, forceUniqueStarterTypes));
 
         // 5 - 10: dropdowns
         write2ByteInt(out, customStarters[0] - 1);
@@ -656,6 +658,7 @@ public class Settings {
         settings.setRandomizeStartersHeldItems(restoreState(data[4], 4));
         settings.setBanBadRandomStarterHeldItems(restoreState(data[4], 5));
         settings.setAllowStarterAltFormes(restoreState(data[4],6));
+        settings.setForceUniqueStarterTypes(restoreState(data[4],7));
 
         settings.setCustomStarters(new int[] { FileFunctions.read2ByteInt(data, 5) + 1,
                 FileFunctions.read2ByteInt(data, 7) + 1, FileFunctions.read2ByteInt(data, 9) + 1 });
@@ -1351,6 +1354,14 @@ public class Settings {
 
     public void setAllowStarterAltFormes(boolean allowStarterAltFormes) {
         this.allowStarterAltFormes = allowStarterAltFormes;
+    }
+
+    public boolean isForceUniqueStarterTypes() {
+        return forceUniqueStarterTypes;
+    }
+
+    public void setForceUniqueStarterTypes(boolean forceUniqueStarterTypes) {
+        this.forceUniqueStarterTypes = forceUniqueStarterTypes;
     }
 
     

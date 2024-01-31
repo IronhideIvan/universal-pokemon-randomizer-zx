@@ -322,4 +322,40 @@ public class Pokemon implements Comparable<Pokemon> {
         return realCosmeticFormNumbers.isEmpty() ? num : realCosmeticFormNumbers.get(num);
     }
 
+    public boolean sharesAnyTypes(Pokemon pokemon) {
+        if(this.primaryType == pokemon.primaryType) {
+            return true;
+        }
+
+        if(this.secondaryType != null
+                && pokemon.secondaryType != null
+                && this.secondaryType == pokemon.secondaryType) {
+            return true;
+        }
+
+        if(this.secondaryType != null && this.secondaryType == pokemon.primaryType) {
+            return true;
+        }
+
+        if(this.secondaryType != null && pokemon.secondaryType == this.primaryType) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean sharesAnyTypes(List<Pokemon> pokemonList) {
+        if(pokemonList == null || pokemonList.isEmpty()){
+            return false;
+        }
+
+        for(Pokemon checkPokemon: pokemonList) {
+            if(sharesAnyTypes(checkPokemon)){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }

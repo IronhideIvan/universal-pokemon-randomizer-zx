@@ -300,6 +300,7 @@ public class NewRandomizerGUI {
     private JCheckBox paEnsureTwoAbilitiesCheckbox;
     private JCheckBox miscUpdateRotomFormeTypingCheckBox;
     private JCheckBox miscDisableLowHPMusicCheckBox;
+    private JCheckBox spForceUniqueStarterTypesCheckBox;
 
     private static JFrame frame;
 
@@ -1505,6 +1506,7 @@ public class NewRandomizerGUI {
         spRandomizeStarterHeldItemsCheckBox.setSelected(settings.isRandomizeStartersHeldItems());
         spBanBadItemsCheckBox.setSelected(settings.isBanBadRandomStarterHeldItems());
         spAllowAltFormesCheckBox.setSelected(settings.isAllowStarterAltFormes());
+        spForceUniqueStarterTypesCheckBox.setSelected(settings.isForceUniqueStarterTypes());
 
         int[] customStarters = settings.getCustomStarters();
         spComboBox1.setSelectedIndex(customStarters[0] - 1);
@@ -1747,6 +1749,7 @@ public class NewRandomizerGUI {
         settings.setRandomizeStartersHeldItems(spRandomizeStarterHeldItemsCheckBox.isSelected() && spRandomizeStarterHeldItemsCheckBox.isVisible());
         settings.setBanBadRandomStarterHeldItems(spBanBadItemsCheckBox.isSelected() && spBanBadItemsCheckBox.isVisible());
         settings.setAllowStarterAltFormes(spAllowAltFormesCheckBox.isSelected() && spAllowAltFormesCheckBox.isVisible());
+        settings.setForceUniqueStarterTypes(spForceUniqueStarterTypesCheckBox.isSelected() && spForceUniqueStarterTypesCheckBox.isVisible());
 
         int[] customStarters = new int[] { spComboBox1.getSelectedIndex() + 1,
                 spComboBox2.getSelectedIndex() + 1, spComboBox3.getSelectedIndex() + 1 };
@@ -2179,6 +2182,9 @@ public class NewRandomizerGUI {
         spAllowAltFormesCheckBox.setVisible(true);
         spAllowAltFormesCheckBox.setEnabled(false);
         spAllowAltFormesCheckBox.setSelected(false);
+        spForceUniqueStarterTypesCheckBox.setVisible(true);
+        spForceUniqueStarterTypesCheckBox.setEnabled(false);
+        spForceUniqueStarterTypesCheckBox.setSelected(false);
         stpUnchangedRadioButton.setVisible(true);
         stpUnchangedRadioButton.setEnabled(false);
         stpUnchangedRadioButton.setSelected(false);
@@ -3227,6 +3233,13 @@ public class NewRandomizerGUI {
             spAllowAltFormesCheckBox.setSelected(false);
         } else {
             spAllowAltFormesCheckBox.setEnabled(true);
+        }
+
+        if(spRandomCompletelyRadioButton.isSelected() || spRandomTwoEvosRadioButton.isSelected()){
+            spForceUniqueStarterTypesCheckBox.setEnabled(true);
+        } else {
+            spForceUniqueStarterTypesCheckBox.setEnabled(false);
+            spForceUniqueStarterTypesCheckBox.setSelected(false);
         }
 
         if (spRandomizeStarterHeldItemsCheckBox.isSelected()) {

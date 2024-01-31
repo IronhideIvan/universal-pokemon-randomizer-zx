@@ -3998,6 +3998,7 @@ public abstract class AbstractRomHandler implements RomHandler {
         boolean abilitiesUnchanged = settings.getAbilitiesMod() == Settings.AbilitiesMod.UNCHANGED;
         boolean allowAltFormes = settings.isAllowStarterAltFormes();
         boolean banIrregularAltFormes = settings.isBanIrregularAltFormes();
+        boolean forceUniqueTypes = settings.isForceUniqueStarterTypes();
 
         int starterCount = starterCount();
         pickedStarters = new ArrayList<>();
@@ -4011,7 +4012,11 @@ public abstract class AbstractRomHandler implements RomHandler {
         }
         for (int i = 0; i < starterCount; i++) {
             Pokemon pkmn = allowAltFormes ? randomPokemonInclFormes() : randomPokemon();
-            while (pickedStarters.contains(pkmn) || banned.contains(pkmn) || pkmn.actuallyCosmetic) {
+            while (pickedStarters.contains(pkmn)
+                    || banned.contains(pkmn)
+                    || pkmn.actuallyCosmetic
+                    || (forceUniqueTypes && pkmn.sharesAnyTypes(pickedStarters))) {
+
                 pkmn = allowAltFormes ? randomPokemonInclFormes() : randomPokemon();
             }
             pickedStarters.add(pkmn);
@@ -4024,6 +4029,7 @@ public abstract class AbstractRomHandler implements RomHandler {
         boolean abilitiesUnchanged = settings.getAbilitiesMod() == Settings.AbilitiesMod.UNCHANGED;
         boolean allowAltFormes = settings.isAllowStarterAltFormes();
         boolean banIrregularAltFormes = settings.isBanIrregularAltFormes();
+        boolean forceUniqueTypes = settings.isForceUniqueStarterTypes();
 
         int starterCount = starterCount();
         pickedStarters = new ArrayList<>();
@@ -4037,7 +4043,11 @@ public abstract class AbstractRomHandler implements RomHandler {
         }
         for (int i = 0; i < starterCount; i++) {
             Pokemon pkmn = random2EvosPokemon(allowAltFormes);
-            while (pickedStarters.contains(pkmn) || banned.contains(pkmn)) {
+            while (pickedStarters.contains(pkmn)
+                    || banned.contains(pkmn)
+                    || pkmn.actuallyCosmetic
+                    || (forceUniqueTypes && pkmn.sharesAnyTypes(pickedStarters))) {
+
                 pkmn = random2EvosPokemon(allowAltFormes);
             }
             pickedStarters.add(pkmn);
