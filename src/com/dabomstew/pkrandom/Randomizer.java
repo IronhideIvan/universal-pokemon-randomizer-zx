@@ -454,6 +454,7 @@ public class Randomizer {
             case MAINPLAYTHROUGH:
             case TYPE_THEMED:
             case TYPE_THEMED_ELITE4_GYMS:
+            case TYPE_THEMED_ALL_GROUPS:
                 romHandler.randomizeTrainerPokes(settings);
                 trainersChanged = true;
                 break;
@@ -1157,6 +1158,7 @@ public class Randomizer {
                     log.printf("(%s)", currentTrainerName);
                 }
             }
+            log.printf(" [Group=%s]", t.tag == null ? "NULL" : t.tag);
             if (t.offset != 0) {
                 log.printf("@%X", t.offset);
             }

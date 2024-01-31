@@ -58,7 +58,15 @@ public class TrainerPokemon {
     public boolean resetMoves = false;
 
     public String toString() {
-        String s = pokemon.name + formeSuffix;
+        String s = pokemon.name + formeSuffix + " [";
+
+        s += pokemon.primaryType == null ? "NULL" : pokemon.primaryType.toString();
+        if(pokemon.secondaryType != null) {
+            s += ", " + pokemon.secondaryType;
+        }
+
+        s += "]";
+
         if (heldItem != 0) {
             // This can be filled in with the actual name when written to the log.
             s += "@%s";
