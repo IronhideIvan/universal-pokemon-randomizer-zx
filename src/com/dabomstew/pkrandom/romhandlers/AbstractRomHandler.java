@@ -1727,7 +1727,7 @@ public abstract class AbstractRomHandler implements RomHandler {
                     group = group.substring(0, group.indexOf('-'));
                 }
                 if (group.startsWith("GYM") || group.startsWith("ELITE") || group.startsWith("CHAMPION") || group.startsWith("THEMED")) {
-                    if(isTypeThemedEliteFourGymOnly && (group.startsWith("CHAMPION") || group.startsWith("THEMED"))) {
+                    if(isTypeThemedEliteFourGymOnly && !group.startsWith("GYM") && !group.startsWith("ELITE")) {
                         continue;
                     }
 
