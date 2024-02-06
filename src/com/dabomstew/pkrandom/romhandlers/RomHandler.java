@@ -38,6 +38,30 @@ import com.dabomstew.pkrandom.pokemon.*;
 
 public interface RomHandler {
 
+    List<Pokemon> getMainPokemonList();
+
+    List<Pokemon> getMainPokemonListInclFormes();
+
+    List<Pokemon> getAltFormesList();
+
+    List<MegaEvolution> getMegaEvolutionsList();
+
+    List<Pokemon> getNoLegendaryList();
+
+    List<Pokemon> getOnlyLegendaryList();
+
+    List<Pokemon> getUltraBeastList();
+
+    List<Pokemon> getNoLegendaryListInclFormes();
+
+    List<Pokemon> getOnlyLegendaryListInclFormes();
+
+    List<Pokemon> getNoLegendaryAltsList();
+
+    List<Pokemon> getOnlyLegendaryAltsList();
+
+    int getFullyEvolvedRandomSeed();
+
     abstract class Factory {
         public RomHandler create(Random random) {
             return create(random, null);
@@ -179,10 +203,9 @@ public interface RomHandler {
     // Pokemon Types
     // =============
 
-    // return a random type valid in this game.
-    Type randomType();
-
     boolean typeInGame(Type type);
+
+    Type randomType();
 
     // randomize Pokemon types, with a switch on whether evolutions
     // should follow the same types or not.
@@ -251,7 +274,7 @@ public interface RomHandler {
 
     void setTrainers(List<Trainer> trainerData, boolean doubleBattleMode);
 
-    void randomizeTrainerPokes(Settings settings);
+    void setFormeForTrainerPokemon(TrainerPokemon tp, Pokemon pk);
 
     void randomizeTrainerHeldItems(Settings settings);
 
@@ -265,10 +288,6 @@ public interface RomHandler {
 
     boolean hasRivalFinalBattle();
 
-    void forceFullyEvolvedTrainerPokes(Settings settings);
-
-    void onlyChangeTrainerLevels(Settings settings);
-
     void addTrainerPokemon(Settings settings);
 
     void doubleBattleMode();
@@ -280,6 +299,10 @@ public interface RomHandler {
     // =========
     // Move Data
     // =========
+
+    int getRandomAbilitySlot(Pokemon pokemon);
+
+    int getValidAbilitySlotFromOriginal(Pokemon pokemon, int originalAbilitySlot);
 
     void randomizeMovePowers();
 
@@ -645,17 +668,21 @@ public interface RomHandler {
 
     boolean isEffectivenessUpdated();
 
-    void renderPlacementHistory();
-
     // ==========================
     // Misc forme-related methods
     // ==========================
 
     boolean hasFunctionalFormes();
 
+    List<Pokemon> pokemonOfType(Type type, boolean noLegendaries);
+
+    List<Pokemon> pokemonOfTypeInclFormes(Type type, boolean noLegendaries);
+
     List<Pokemon> getAbilityDependentFormes();
 
     List<Pokemon> getBannedFormesForPlayerPokemon();
 
     List<Pokemon> getBannedFormesForTrainerPokemon();
+
+    void checkPokemonRestrictions();
 }

@@ -30,6 +30,7 @@ import java.io.PrintStream;
 import java.util.*;
 
 import com.dabomstew.pkrandom.pokemon.*;
+import com.dabomstew.pkrandom.randomizers.TrainerPokemonRandomizer;
 import com.dabomstew.pkrandom.romhandlers.Gen1RomHandler;
 import com.dabomstew.pkrandom.romhandlers.RomHandler;
 
@@ -41,13 +42,15 @@ public class Randomizer {
     private final Settings settings;
     private final RomHandler romHandler;
     private final ResourceBundle bundle;
+    private final Random random;
     private final boolean saveAsDirectory;
 
-    public Randomizer(Settings settings, RomHandler romHandler, ResourceBundle bundle, boolean saveAsDirectory) {
+    public Randomizer(Settings settings, Random random, RomHandler romHandler, ResourceBundle bundle, boolean saveAsDirectory) {
         this.settings = settings;
         this.romHandler = romHandler;
         this.bundle = bundle;
         this.saveAsDirectory = saveAsDirectory;
+        this.random = random;
     }
 
     public int randomize(final String filename) {
@@ -448,6 +451,7 @@ public class Randomizer {
             trainersChanged = true;
         }
 
+        TrainerPokemonRandomizer tpRandomizer = new TrainerPokemonRandomizer(this.random, this.romHandler, settings);
         switch(settings.getTrainersMod()) {
             case RANDOM:
             case DISTRIBUTED:
@@ -455,12 +459,12 @@ public class Randomizer {
             case TYPE_THEMED:
             case TYPE_THEMED_ELITE4_GYMS:
             case TYPE_THEMED_ALL_GROUPS:
-                romHandler.randomizeTrainerPokes(settings);
+                tpRandomizer.randomizeTrainerPokemon();
                 trainersChanged = true;
                 break;
             default:
                 if (settings.isTrainersLevelModified()) {
-                    romHandler.onlyChangeTrainerLevels(settings);
+                    tpRandomizer.onlyChangeTrainerLevels();
                     trainersChanged = true;
                 }
                 break;
@@ -474,7 +478,7 @@ public class Randomizer {
         }
 
         if (settings.isTrainersForceFullyEvolved()) {
-            romHandler.forceFullyEvolvedTrainerPokes(settings);
+            tpRandomizer.forceFullyEvolvedTrainerPokes();
             trainersChanged = true;
         }
 
@@ -666,7 +670,7 @@ public class Randomizer {
         }
 
         // Test output for placement history
-        // romHandler.renderPlacementHistory();
+        // tpRandomizer.renderPlacementHistory();
 
         // Intro Pokemon...
         romHandler.randomizeIntroPokemon();
