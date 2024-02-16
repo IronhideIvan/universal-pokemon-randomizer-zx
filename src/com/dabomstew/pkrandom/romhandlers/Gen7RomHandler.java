@@ -3079,8 +3079,9 @@ public class Gen7RomHandler extends Abstract3DSRomHandler {
     }
 
     @Override
-    public void randomizeIntroPokemon() {
+    public boolean setIntroPokemon(Pokemon pokemon) {
         // For now, do nothing.
+        return true;
     }
 
     @Override
@@ -3670,7 +3671,7 @@ public class Gen7RomHandler extends Abstract3DSRomHandler {
     }
 
     @Override
-    public BufferedImage getMascotImage() {
+    public BufferedImage getMascotImage(Pokemon mascot) {
         try {
             GARCArchive pokespritesGARC = this.readGARC(romEntry.getFile("PokemonGraphics"), false);
             int pkIndex = this.random.nextInt(pokespritesGARC.files.size() - 1) + 1;

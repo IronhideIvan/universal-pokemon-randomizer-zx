@@ -3805,7 +3805,9 @@ public class NewRandomizerGUI {
 
     private ImageIcon makeMascotIcon() {
         try {
-            BufferedImage handlerImg = romHandler.getMascotImage();
+            Random random = RandomSource.instance();
+            List<Pokemon> pokemonList = romHandler.getPokemon();
+            BufferedImage handlerImg = romHandler.getMascotImage(pokemonList.get(random.nextInt(pokemonList.size())));
 
             if (handlerImg == null) {
                 return emptyIcon;

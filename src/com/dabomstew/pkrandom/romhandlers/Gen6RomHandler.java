@@ -3389,28 +3389,27 @@ public class Gen6RomHandler extends Abstract3DSRomHandler {
     }
 
     @Override
-    public void randomizeIntroPokemon() {
+    public boolean setIntroPokemon(Pokemon pokemon) {
 
         if (romEntry.romType == Gen6Constants.Type_XY) {
 
             // Pick a random Pokemon, including formes
 
-            Pokemon introPokemon = randomPokemonInclFormes();
-            while (introPokemon.actuallyCosmetic) {
-                introPokemon = randomPokemonInclFormes();
+            if (pokemon.actuallyCosmetic) {
+                return false;
             }
-            int introPokemonNum = introPokemon.number;
+            int introPokemonNum = pokemon.number;
             int introPokemonForme = 0;
             boolean checkCosmetics = true;
-            if (introPokemon.formeNumber > 0) {
-                introPokemonForme = introPokemon.formeNumber;
-                introPokemonNum = introPokemon.baseForme.number;
+            if (pokemon.formeNumber > 0) {
+                introPokemonForme = pokemon.formeNumber;
+                introPokemonNum = pokemon.baseForme.number;
                 checkCosmetics = false;
             }
-            if (checkCosmetics && introPokemon.cosmeticForms > 0) {
-                introPokemonForme = introPokemon.getCosmeticFormNumber(this.random.nextInt(introPokemon.cosmeticForms));
-            } else if (!checkCosmetics && introPokemon.cosmeticForms > 0) {
-                introPokemonForme += introPokemon.getCosmeticFormNumber(this.random.nextInt(introPokemon.cosmeticForms));
+            if (checkCosmetics && pokemon.cosmeticForms > 0) {
+                introPokemonForme = pokemon.getCosmeticFormNumber(this.random.nextInt(pokemon.cosmeticForms));
+            } else if (!checkCosmetics && pokemon.cosmeticForms > 0) {
+                introPokemonForme += pokemon.getCosmeticFormNumber(this.random.nextInt(pokemon.cosmeticForms));
             }
 
             // Find the value for the Pokemon's cry
@@ -3484,6 +3483,8 @@ public class Gen6RomHandler extends Abstract3DSRomHandler {
                 e.printStackTrace();
             }
         }
+
+        return true;
     }
 
     @Override
@@ -4125,7 +4126,7 @@ public class Gen6RomHandler extends Abstract3DSRomHandler {
     }
 
     @Override
-    public BufferedImage getMascotImage() {
+    public BufferedImage getMascotImage(Pokemon mascot) {
         try {
             GARCArchive pokespritesGARC = this.readGARC(romEntry.getFile("PokemonGraphics"),false);
             int pkIndex = this.random.nextInt(pokespritesGARC.files.size()-2)+1;

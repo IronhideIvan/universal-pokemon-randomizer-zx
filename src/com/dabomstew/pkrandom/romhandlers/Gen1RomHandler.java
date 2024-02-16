@@ -2128,8 +2128,6 @@ public class Gen1RomHandler extends AbstractGBCRomHandler {
             applyCamelCaseNames();
         } else if (tweak == MiscTweak.UPDATE_TYPE_EFFECTIVENESS) {
             updateTypeEffectiveness();
-        } else if (tweak == MiscTweak.RANDOMIZE_CATCHING_TUTORIAL) {
-            randomizeCatchingTutorial();
         }
     }
 
@@ -2168,10 +2166,12 @@ public class Gen1RomHandler extends AbstractGBCRomHandler {
         }
     }
 
-    private void randomizeCatchingTutorial() {
+    @Override
+    public boolean setCatchingTutorial(Pokemon player, Pokemon opponent) {
         if (romEntry.getValue("CatchingTutorialMonOffset") != 0) {
-            rom[romEntry.getValue("CatchingTutorialMonOffset")] = (byte) pokeNumToRBYTable[this.randomPokemon().number];
+            rom[romEntry.getValue("CatchingTutorialMonOffset")] = (byte) pokeNumToRBYTable[opponent.number];
         }
+        return true;
     }
 
     @Override
@@ -2236,13 +2236,13 @@ public class Gen1RomHandler extends AbstractGBCRomHandler {
     }
 
     @Override
-    public void randomizeIntroPokemon() {
+    public boolean setIntroPokemon(Pokemon pokemon) {
         // First off, intro Pokemon
         // 160 add yellow intro random
-        int introPokemon = pokeNumToRBYTable[this.randomPokemon().number];
+        int introPokemon = pokeNumToRBYTable[pokemon.number];
         rom[romEntry.getValue("IntroPokemonOffset")] = (byte) introPokemon;
         rom[romEntry.getValue("IntroCryOffset")] = (byte) introPokemon;
-
+        return true;
     }
 
     @Override
@@ -2863,8 +2863,7 @@ public class Gen1RomHandler extends AbstractGBCRomHandler {
     }
 
     @Override
-    public BufferedImage getMascotImage() {
-        Pokemon mascot = randomPokemon();
+    public BufferedImage getMascotImage(Pokemon mascot) {
         int idx = pokeNumToRBYTable[mascot.number];
         int fsBank;
         // define (by index number) the bank that a pokemon's image is in

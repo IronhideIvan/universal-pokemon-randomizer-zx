@@ -221,5 +221,4 @@ public abstract class AbstractGBCRomHandler extends AbstractGBRomHandler {
         }
 
     }
-
 }

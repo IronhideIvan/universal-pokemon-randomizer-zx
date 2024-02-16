@@ -2243,8 +2243,6 @@ public class Gen2RomHandler extends AbstractGBCRomHandler {
             applyFastestTextPatch();
         } else if (tweak == MiscTweak.LOWER_CASE_POKEMON_NAMES) {
             applyCamelCaseNames();
-        } else if (tweak == MiscTweak.RANDOMIZE_CATCHING_TUTORIAL) {
-            randomizeCatchingTutorial();
         } else if (tweak == MiscTweak.BAN_LUCKY_EGG) {
             allowedItems.banSingles(Gen2Items.luckyEgg);
             nonBadItems.banSingles(Gen2Items.luckyEgg);
@@ -2258,13 +2256,14 @@ public class Gen2RomHandler extends AbstractGBCRomHandler {
         return effectivenessUpdated;
     }
 
-    private void randomizeCatchingTutorial() {
+    @Override
+    public boolean setCatchingTutorial(Pokemon player, Pokemon opponent) {
         if (romEntry.arrayEntries.containsKey("CatchingTutorialOffsets")) {
             // Pick a pokemon
-            int pokemon = this.random.nextInt(Gen2Constants.pokemonCount) + 1;
+            int pokemon = opponent.number;
             while (pokemon == Species.unown) {
                 // Unown is banned
-                pokemon = this.random.nextInt(Gen2Constants.pokemonCount) + 1;
+                return false;
             }
 
             int[] offsets = romEntry.arrayEntries.get("CatchingTutorialOffsets");
@@ -2272,7 +2271,7 @@ public class Gen2RomHandler extends AbstractGBCRomHandler {
                 rom[offset] = (byte) pokemon;
             }
         }
-
+        return true;
     }
 
     private void applyBWEXPPatch() {
@@ -2398,19 +2397,16 @@ public class Gen2RomHandler extends AbstractGBCRomHandler {
     }
 
     @Override
-    public void randomizeIntroPokemon() {
+    public boolean setIntroPokemon(Pokemon pokemon) {
         // Intro sprite
-
-        // Pick a pokemon
-        int pokemon = this.random.nextInt(Gen2Constants.pokemonCount) + 1;
-        while (pokemon == Species.unown) {
+        if (pokemon.number == Species.unown) {
             // Unown is banned
-            pokemon = this.random.nextInt(Gen2Constants.pokemonCount) + 1;
+            return false;
         }
 
-        rom[romEntry.getValue("IntroSpriteOffset")] = (byte) pokemon;
-        rom[romEntry.getValue("IntroCryOffset")] = (byte) pokemon;
-
+        rom[romEntry.getValue("IntroSpriteOffset")] = (byte) pokemon.number;
+        rom[romEntry.getValue("IntroCryOffset")] = (byte) pokemon.number;
+        return true;
     }
 
     @Override
@@ -2932,11 +2928,10 @@ public class Gen2RomHandler extends AbstractGBCRomHandler {
     }
 
     @Override
-    public BufferedImage getMascotImage() {
-        Pokemon mascot = randomPokemon();
-        while (mascot.number == Species.unown) {
+    public BufferedImage getMascotImage(Pokemon mascot) {
+        if (mascot.number == Species.unown) {
             // Unown is banned as handling it would add a ton of extra effort.
-            mascot = randomPokemon();
+            return null;
         }
 
         // Each Pokemon has a front and back pic with a bank and a pointer

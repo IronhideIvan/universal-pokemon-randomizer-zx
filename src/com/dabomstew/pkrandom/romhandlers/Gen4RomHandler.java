@@ -2242,7 +2242,16 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
         // happens. This is very unlikely to happen in practice, even with very
         // restrictive settings, so it should be okay that we're breaking logic here.
         while (trophyGardenEncounters.encounters.stream().distinct().count() == 1) {
-            trophyGardenEncounters.encounters.get(0).pokemon = randomPokemon();
+            Pokemon samePokemon = trophyGardenEncounters.encounters.getFirst().pokemon;
+            List<Pokemon> allPokemon = getPokemon();
+            Pokemon newPokemon = samePokemon;
+            if(newPokemon.number > allPokemon.size() / 2) {
+                newPokemon = allPokemon.get(newPokemon.number - 5);
+            }
+            else {
+                newPokemon = allPokemon.get(newPokemon.number + 5);
+            }
+            trophyGardenEncounters.encounters.get(0).pokemon = newPokemon;
         }
         writeExtraEncountersDPPt(trophyGardenData, 0, trophyGardenEncounters.encounters);
 
@@ -4752,24 +4761,23 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
     }
 
     @Override
-    public void randomizeIntroPokemon() {
+    public boolean setIntroPokemon(Pokemon pokemon) {
         try {
             if (romEntry.romType == Gen4Constants.Type_DP || romEntry.romType == Gen4Constants.Type_Plat) {
-                Pokemon introPokemon = randomPokemon();
-                while (introPokemon.genderRatio == 0xFE) {
+                if (pokemon.genderRatio == 0xFE) {
                     // This is a female-only Pokemon. Gen 4 has an annoying quirk where female-only Pokemon *need*
                     // to pass a special parameter into the function that loads Pokemon sprites; the game will
                     // softlock on native hardware otherwise. The way the compiler has optimized the intro Pokemon
                     // code makes it very hard to modify, so passing in this special parameter is difficult. Rather
                     // than attempt to patch this code, just reroll until it isn't female-only.
-                    introPokemon = randomPokemon();
+                    return false;
                 }
                 byte[] introOverlay = readOverlay(romEntry.getInt("IntroOvlNumber"));
                 for (String prefix : Gen4Constants.dpptIntroPrefixes) {
                     int offset = find(introOverlay, prefix);
                     if (offset > 0) {
                         offset += prefix.length() / 2; // because it was a prefix
-                        writeWord(introOverlay, offset, introPokemon.number);
+                        writeWord(introOverlay, offset, pokemon.number);
                     }
                 }
                 writeOverlay(romEntry.getInt("IntroOvlNumber"), introOverlay);
@@ -4830,6 +4838,8 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
         } catch (IOException e) {
             throw new RandomizerIOException(e);
         }
+
+        return true;
     }
 
     @Override
@@ -5287,8 +5297,6 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
     public void applyMiscTweak(MiscTweak tweak) {
         if (tweak == MiscTweak.LOWER_CASE_POKEMON_NAMES) {
             applyCamelCaseNames();
-        } else if (tweak == MiscTweak.RANDOMIZE_CATCHING_TUTORIAL) {
-            randomizeCatchingTutorial();
         } else if (tweak == MiscTweak.FASTEST_TEXT) {
             applyFastestText();
         } else if (tweak == MiscTweak.BAN_LUCKY_EGG) {
@@ -5314,7 +5322,8 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
         return effectivenessUpdated;
     }
 
-    private void randomizeCatchingTutorial() {
+    @Override
+    public boolean setCatchingTutorial(Pokemon player, Pokemon opponent) {
         int opponentOffset = romEntry.getInt("CatchingTutorialOpponentMonOffset");
 
         if (romEntry.tweakFiles.containsKey("NewCatchingTutorialSubroutineTweak")) {
@@ -5327,7 +5336,9 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
                 // randomizeIntroPokemon), so we just care about the enemy mon. As part of our catching
                 // tutorial patch, the player and enemy species IDs are pc-relative loaded, with the
                 // enemy ID occurring right after the player ID (which is what offset is pointing to).
-                Pokemon opponent = randomPokemonLimited(Integer.MAX_VALUE, false);
+                if (isInvalidPokemon(opponent, Integer.MAX_VALUE, false)){
+                    return false;
+                }
                 writeWord(arm9, offset + 4, opponent.number);
             }
         } else if (romEntry.romType == Gen4Constants.Type_HGSS) {
@@ -5335,22 +5346,24 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
             // Make sure to raise the level of Lyra/Ethan's Pokemon to 10 to prevent softlocks
             int playerOffset = romEntry.getInt("CatchingTutorialPlayerMonOffset");
             int levelOffset = romEntry.getInt("CatchingTutorialPlayerLevelOffset");
-            Pokemon opponent = randomPokemonLimited(255, false);
-            Pokemon player = randomPokemonLimited(255, false);
-            if (opponent != null && player != null) {
-                arm9[opponentOffset] = (byte) opponent.number;
-                arm9[playerOffset] = (byte) player.number;
-                arm9[levelOffset] = 10;
+            if (isInvalidPokemon(opponent, 255, false)){
+                return false;
             }
+            if (isInvalidPokemon(player, 255, false)){
+                return false;
+            }
+            arm9[opponentOffset] = (byte) opponent.number;
+            arm9[playerOffset] = (byte) player.number;
+            arm9[levelOffset] = 10;
         } else {
             // DPPt only supports randomizing the opponent, but enough space for any mon
-            Pokemon opponent = randomPokemonLimited(Integer.MAX_VALUE, false);
-
-            if (opponent != null) {
-                writeLong(arm9, opponentOffset, opponent.number);
+            if (isInvalidPokemon(opponent, Integer.MAX_VALUE, false)){
+                return false;
             }
+            writeLong(arm9, opponentOffset, opponent.number);
         }
 
+        return true;
     }
 
     private void applyFastestText() {
@@ -5641,19 +5654,11 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
         }
     }
 
-    private Pokemon randomPokemonLimited(int maxValue, boolean blockNonMales) {
-        checkPokemonRestrictions();
-        List<Pokemon> validPokemon = new ArrayList<>();
-        for (Pokemon pk : this.mainPokemonList) {
-            if (pk.number <= maxValue && (!blockNonMales || pk.genderRatio <= 0xFD)) {
-                validPokemon.add(pk);
-            }
+    private boolean isInvalidPokemon(Pokemon pokemon, int maxValue, boolean blockNonMales) {
+        if (pokemon.number <= maxValue && (!blockNonMales || pokemon.genderRatio <= 0xFD)) {
+            return false;
         }
-        if (validPokemon.size() == 0) {
-            return null;
-        } else {
-            return validPokemon.get(random.nextInt(validPokemon.size()));
-        }
+        return true;
     }
 
     private void computeCRC32sForRom() throws IOException {
@@ -5699,12 +5704,11 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
     }
 
     @Override
-    public BufferedImage getMascotImage() {
+    public BufferedImage getMascotImage(Pokemon mascot) {
         try {
-            Pokemon pk = randomPokemon();
             NARCArchive pokespritesNARC = this.readNARC(romEntry.getFile("PokemonGraphics"));
-            int spriteIndex = pk.number * 6 + 2 + random.nextInt(2);
-            int palIndex = pk.number * 6 + 4;
+            int spriteIndex = mascot.number * 6 + 2 + random.nextInt(2);
+            int palIndex = mascot.number * 6 + 4;
             if (random.nextInt(10) == 0) {
                 // shiny
                 palIndex++;

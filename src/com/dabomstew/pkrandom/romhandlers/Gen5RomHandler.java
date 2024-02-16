@@ -3448,9 +3448,9 @@ public class Gen5RomHandler extends AbstractDSRomHandler {
     }
 
     @Override
-    public void randomizeIntroPokemon() {
+    public boolean setIntroPokemon(Pokemon pokemon) {
         try {
-            int introPokemon = randomPokemon().number;
+            int introPokemon = pokemon.number;
             byte[] introGraphicOverlay = readOverlay(romEntry.getInt("IntroGraphicOvlNumber"));
             int offset = find(introGraphicOverlay, Gen5Constants.introGraphicPrefix);
             if (offset > 0) {
@@ -3506,6 +3506,8 @@ public class Gen5RomHandler extends AbstractDSRomHandler {
         } catch (IOException e) {
             throw new RandomizerIOException(e);
         }
+
+        return true;
     }
 
     @Override
@@ -4203,13 +4205,12 @@ public class Gen5RomHandler extends AbstractDSRomHandler {
     }
 
     @Override
-    public BufferedImage getMascotImage() {
+    public BufferedImage getMascotImage(Pokemon mascot) {
         try {
-            Pokemon pk = randomPokemonInclFormes();
             NARCArchive pokespritesNARC = this.readNARC(romEntry.getFile("PokemonGraphics"));
 
             // First prepare the palette, it's the easy bit
-            int palIndex = pk.getSpriteIndex() * 20 + 18;
+            int palIndex = mascot.getSpriteIndex() * 20 + 18;
             if (random.nextInt(10) == 0) {
                 // shiny
                 palIndex++;
@@ -4221,7 +4222,7 @@ public class Gen5RomHandler extends AbstractDSRomHandler {
             }
 
             // Get the picture and uncompress it.
-            byte[] compressedPic = pokespritesNARC.files.get(pk.getSpriteIndex() * 20);
+            byte[] compressedPic = pokespritesNARC.files.get(mascot.getSpriteIndex() * 20);
             byte[] uncompressedPic = DSDecmp.Decompress(compressedPic);
 
             // Output to 64x144 tiled image to prepare for unscrambling

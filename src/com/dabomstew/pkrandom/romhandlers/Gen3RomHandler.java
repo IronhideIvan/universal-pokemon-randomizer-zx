@@ -3639,15 +3639,14 @@ public class Gen3RomHandler extends AbstractGBRomHandler {
     }
 
     @Override
-    public void randomizeIntroPokemon() {
+    public boolean setIntroPokemon(Pokemon pokemon) {
         // FRLG
         if (romEntry.romType == Gen3Constants.RomType_FRLG) {
             // intro sprites : first 255 only due to size
-            Pokemon introPk = randomPokemonLimited(255, false);
-            if (introPk == null) {
-                return;
+            if (isInvalidPokemon(pokemon, 255, false)) {
+                return false;
             }
-            int introPokemon = pokedexToInternal[introPk.number];
+            int introPokemon = pokedexToInternal[pokemon.number];
             int frontSprites = romEntry.getValue("FrontSprites");
             int palettes = romEntry.getValue("PokemonPalettes");
 
@@ -3659,9 +3658,9 @@ public class Gen3RomHandler extends AbstractGBRomHandler {
             writePointer(spriteBase + 4, palettes + introPokemon * 8);
         } else if (romEntry.romType == Gen3Constants.RomType_Ruby || romEntry.romType == Gen3Constants.RomType_Sapp) {
             // intro sprites : any pokemon in the range 0-510 except bulbasaur
-            int introPokemon = pokedexToInternal[randomPokemon().number];
-            while (introPokemon == 1 || introPokemon > 510) {
-                introPokemon = pokedexToInternal[randomPokemon().number];
+            int introPokemon = pokedexToInternal[pokemon.number];
+            if (introPokemon == 1 || introPokemon > 510) {
+                return false;
             }
             int frontSprites = romEntry.getValue("PokemonFrontSprites");
             int palettes = romEntry.getValue("PokemonNormalPalettes");
@@ -3696,26 +3695,19 @@ public class Gen3RomHandler extends AbstractGBRomHandler {
             writePointer(romEntry.getValue("IntroPaletteOffset"), palettes + introPokemon * 8);
         } else {
             // Emerald, intro sprite: any Pokemon.
-            int introPokemon = pokedexToInternal[randomPokemon().number];
+            int introPokemon = pokedexToInternal[pokemon.number];
             writeWord(romEntry.getValue("IntroSpriteOffset"), introPokemon);
             writeWord(romEntry.getValue("IntroCryOffset"), introPokemon);
         }
 
+        return true;
     }
 
-    private Pokemon randomPokemonLimited(int maxValue, boolean blockNonMales) {
-        checkPokemonRestrictions();
-        List<Pokemon> validPokemon = new ArrayList<>();
-        for (Pokemon pk : this.mainPokemonList) {
-            if (pokedexToInternal[pk.number] <= maxValue && (!blockNonMales || pk.genderRatio <= 0xFD)) {
-                validPokemon.add(pk);
-            }
+    private boolean isInvalidPokemon(Pokemon pokemon, int maxValue, boolean blockNonMales) {
+        if (pokedexToInternal[pokemon.number] <= maxValue && (!blockNonMales || pokemon.genderRatio <= 0xFD)) {
+            return false;
         }
-        if (validPokemon.size() == 0) {
-            return null;
-        } else {
-            return validPokemon.get(random.nextInt(validPokemon.size()));
-        }
+        return true;
     }
 
     private void determineMapBankSizes() {
@@ -4169,8 +4161,6 @@ public class Gen3RomHandler extends AbstractGBRomHandler {
             applyCamelCaseNames();
         } else if (tweak == MiscTweak.NATIONAL_DEX_AT_START) {
             patchForNationalDex();
-        } else if (tweak == MiscTweak.RANDOMIZE_CATCHING_TUTORIAL) {
-            randomizeCatchingTutorial();
         } else if (tweak == MiscTweak.BAN_LUCKY_EGG) {
             allowedItems.banSingles(Gen3Items.luckyEgg);
             nonBadItems.banSingles(Gen3Items.luckyEgg);
@@ -4193,57 +4183,58 @@ public class Gen3RomHandler extends AbstractGBRomHandler {
         return effectivenessUpdated;
     }
 
-    private void randomizeCatchingTutorial() {
+    @Override
+    public boolean setCatchingTutorial(Pokemon player, Pokemon opponent) {
         if (romEntry.getValue("CatchingTutorialOpponentMonOffset") > 0) {
             int oppOffset = romEntry.getValue("CatchingTutorialOpponentMonOffset");
             if (romEntry.romType == Gen3Constants.RomType_FRLG) {
-                Pokemon opponent = randomPokemonLimited(255, true);
-                if (opponent != null) {
+                if(isInvalidPokemon(opponent, 255, true)) {
+                    return false;
+                }
+                int oppValue = pokedexToInternal[opponent.number];
+                rom[oppOffset] = (byte) oppValue;
+                rom[oppOffset + 1] = Gen3Constants.gbaSetRxOpcode | Gen3Constants.gbaR1;
+            } else {
+                if(isInvalidPokemon(opponent, 510, true)) {
+                    return false;
+                }
+                int oppValue = pokedexToInternal[opponent.number];
+                if (oppValue > 255) {
+                    rom[oppOffset] = (byte) 0xFF;
+                    rom[oppOffset + 1] = Gen3Constants.gbaSetRxOpcode | Gen3Constants.gbaR1;
 
-                    int oppValue = pokedexToInternal[opponent.number];
+                    rom[oppOffset + 2] = (byte) (oppValue - 0xFF);
+                    rom[oppOffset + 3] = Gen3Constants.gbaAddRxOpcode | Gen3Constants.gbaR1;
+                } else {
                     rom[oppOffset] = (byte) oppValue;
                     rom[oppOffset + 1] = Gen3Constants.gbaSetRxOpcode | Gen3Constants.gbaR1;
-                }
-            } else {
-                Pokemon opponent = randomPokemonLimited(510, true);
-                if (opponent != null) {
-                    int oppValue = pokedexToInternal[opponent.number];
-                    if (oppValue > 255) {
-                        rom[oppOffset] = (byte) 0xFF;
-                        rom[oppOffset + 1] = Gen3Constants.gbaSetRxOpcode | Gen3Constants.gbaR1;
 
-                        rom[oppOffset + 2] = (byte) (oppValue - 0xFF);
-                        rom[oppOffset + 3] = Gen3Constants.gbaAddRxOpcode | Gen3Constants.gbaR1;
-                    } else {
-                        rom[oppOffset] = (byte) oppValue;
-                        rom[oppOffset + 1] = Gen3Constants.gbaSetRxOpcode | Gen3Constants.gbaR1;
-
-                        writeWord(oppOffset + 2, Gen3Constants.gbaNopOpcode);
-                    }
+                    writeWord(oppOffset + 2, Gen3Constants.gbaNopOpcode);
                 }
             }
         }
 
         if (romEntry.getValue("CatchingTutorialPlayerMonOffset") > 0) {
             int playerOffset = romEntry.getValue("CatchingTutorialPlayerMonOffset");
-            Pokemon playerMon = randomPokemonLimited(510, false);
-            if (playerMon != null) {
-                int plyValue = pokedexToInternal[playerMon.number];
-                if (plyValue > 255) {
-                    rom[playerOffset] = (byte) 0xFF;
-                    rom[playerOffset + 1] = Gen3Constants.gbaSetRxOpcode | Gen3Constants.gbaR1;
+            if(isInvalidPokemon(player, 510, false)) {
+                return false;
+            }
+            int plyValue = pokedexToInternal[player.number];
+            if (plyValue > 255) {
+                rom[playerOffset] = (byte) 0xFF;
+                rom[playerOffset + 1] = Gen3Constants.gbaSetRxOpcode | Gen3Constants.gbaR1;
 
-                    rom[playerOffset + 2] = (byte) (plyValue - 0xFF);
-                    rom[playerOffset + 3] = Gen3Constants.gbaAddRxOpcode | Gen3Constants.gbaR1;
-                } else {
-                    rom[playerOffset] = (byte) plyValue;
-                    rom[playerOffset + 1] = Gen3Constants.gbaSetRxOpcode | Gen3Constants.gbaR1;
+                rom[playerOffset + 2] = (byte) (plyValue - 0xFF);
+                rom[playerOffset + 3] = Gen3Constants.gbaAddRxOpcode | Gen3Constants.gbaR1;
+            } else {
+                rom[playerOffset] = (byte) plyValue;
+                rom[playerOffset + 1] = Gen3Constants.gbaSetRxOpcode | Gen3Constants.gbaR1;
 
-                    writeWord(playerOffset + 2, Gen3Constants.gbaNopOpcode);
-                }
+                writeWord(playerOffset + 2, Gen3Constants.gbaNopOpcode);
             }
         }
 
+        return true;
     }
 
     private void applyRunningShoesIndoorsPatch() {
@@ -4397,9 +4388,8 @@ public class Gen3RomHandler extends AbstractGBRomHandler {
     }
 
     @Override
-    public BufferedImage getMascotImage() {
-        Pokemon mascotPk = randomPokemon();
-        int mascotPokemon = pokedexToInternal[mascotPk.number];
+    public BufferedImage getMascotImage(Pokemon mascot) {
+        int mascotPokemon = pokedexToInternal[mascot.number];
         int frontSprites = romEntry.getValue("FrontSprites");
         int palettes = romEntry.getValue("PokemonPalettes");
         int fsOffset = readPointer(frontSprites + mascotPokemon * 8);

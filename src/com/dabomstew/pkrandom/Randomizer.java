@@ -30,9 +30,10 @@ import java.io.PrintStream;
 import java.util.*;
 
 import com.dabomstew.pkrandom.pokemon.*;
-import com.dabomstew.pkrandom.randomizers.TrainerPokemonRandomizer;
+import com.dabomstew.pkrandom.randomizers.*;
 import com.dabomstew.pkrandom.romhandlers.Gen1RomHandler;
 import com.dabomstew.pkrandom.romhandlers.RomHandler;
+import com.dabomstew.pkrandom.services.PokemonService;
 
 // Can randomize a file based on settings. Output varies by seed.
 public class Randomizer {
@@ -98,11 +99,14 @@ public class Randomizer {
         boolean tutorCompatChanged = false;
         boolean shopsChanged = false;
 
+        PokemonService pokemonService = new PokemonService(random, romHandler, settings);
+        pokemonService.checkPokemonRestrictions();
+
+        PokemonRandomizer pokemonRandomizer = new PokemonRandomizer(random, settings, romHandler, pokemonService);
+
         // Limit Pokemon
         // 1. Set Pokemon pool according to limits (or lack thereof)
         // 2. If limited, remove evolutions that are outside of the pool
-
-        romHandler.setPokemonPool(settings);
 
         if (settings.isLimitPokemon()) {
             romHandler.removeEvosForPokemonPool();
@@ -149,7 +153,8 @@ public class Randomizer {
 
         // Misc Tweaks
         if (settings.getCurrentMiscTweaks() != MiscTweak.NO_MISC_TWEAKS) {
-            romHandler.applyMiscTweaks(settings);
+            MiscTweaksRandomizer miscTweaksRandomizer = new MiscTweaksRandomizer(random, settings, romHandler, pokemonService);
+            miscTweaksRandomizer.applyMiscTweaks();
         }
 
         // Update base stats to a future generation
@@ -171,18 +176,19 @@ public class Randomizer {
 
         // Wild Held Items
         if (settings.isRandomizeWildPokemonHeldItems()) {
-            romHandler.randomizeWildHeldItems(settings);
+            pokemonRandomizer.randomizeWildHeldItems();
             pokemonTraitsChanged = true;
         }
 
         // Random Evos
         // Applied after type to pick new evos based on new types.
 
+        EvolutionsRandomizer evolutionsRandomizer = new EvolutionsRandomizer(random, settings, romHandler, pokemonService);
         if (settings.getEvolutionsMod() == Settings.EvolutionsMod.RANDOM) {
-            romHandler.randomizeEvolutions(settings);
+            evolutionsRandomizer.randomizeEvolutions();
             evolutionsChanged = true;
         } else if (settings.getEvolutionsMod() == Settings.EvolutionsMod.RANDOM_EVERY_LEVEL) {
-            romHandler.randomizeEvolutionsEveryLevel(settings);
+            evolutionsRandomizer.randomizeEvolutionsEveryLevel();
             evolutionsChanged = true;
         }
 
@@ -259,19 +265,20 @@ public class Randomizer {
             logUpdatedEvolutions(log, romHandler.getTimeBasedEvoUpdates(), null);
         }
 
+        StartersRandomizer startersRandomizer = new StartersRandomizer(random, settings, romHandler, pokemonService);
         // Starter Pokemon
         // Applied after type to update the strings correctly based on new types
         switch(settings.getStartersMod()) {
             case CUSTOM:
-                romHandler.customStarters(settings);
+                startersRandomizer.customStarters();
                 startersChanged = true;
                 break;
             case COMPLETELY_RANDOM:
-                romHandler.randomizeStarters(settings);
+                startersRandomizer.randomizeStarters();
                 startersChanged = true;
                 break;
             case RANDOM_WITH_TWO_EVOLUTIONS:
-                romHandler.randomizeBasicTwoEvosStarters(settings);
+                startersRandomizer.randomizeBasicTwoEvosStarters();
                 startersChanged = true;
                 break;
             default:
@@ -282,7 +289,7 @@ public class Randomizer {
         }
 
         if (startersChanged) {
-            logStarters(log);
+            logStarters(log, startersRandomizer);
         }
 
         // Move Data Log
@@ -297,11 +304,12 @@ public class Randomizer {
         // 1. Randomize movesets
         // 2. Reorder moves by damage
         // Note: "Metronome only" is handled after trainers instead
+        MoveRandomizer moveRandomizer = new MoveRandomizer(random, settings, romHandler, pokemonService);
 
         if (settings.getMovesetsMod() != Settings.MovesetsMod.UNCHANGED &&
                 settings.getMovesetsMod() != Settings.MovesetsMod.METRONOME_ONLY) {
-            romHandler.randomizeMovesLearnt(settings);
-            romHandler.randomizeEggMoves(settings);
+            moveRandomizer.randomizeMovesLearnt();
+            moveRandomizer.randomizeEggMoves();
             movesetsChanged = true;
         }
 
@@ -451,7 +459,7 @@ public class Randomizer {
             trainersChanged = true;
         }
 
-        TrainerPokemonRandomizer tpRandomizer = new TrainerPokemonRandomizer(this.random, this.romHandler, settings);
+        TrainerPokemonRandomizer tpRandomizer = new TrainerPokemonRandomizer(this.random, this.romHandler, settings, pokemonService);
         switch(settings.getTrainersMod()) {
             case RANDOM:
             case DISTRIBUTED:
@@ -470,10 +478,11 @@ public class Randomizer {
                 break;
         }
 
+
         if ((settings.getTrainersMod() != Settings.TrainersMod.UNCHANGED
                 || settings.getStartersMod() != Settings.StartersMod.UNCHANGED)
                 && settings.isRivalCarriesStarterThroughout()) {
-            romHandler.rivalCarriesStarter();
+            tpRandomizer.rivalCarriesStarter();
             trainersChanged = true;
         }
 
@@ -521,7 +530,7 @@ public class Randomizer {
 
         // Apply metronome only mode now that trainers have been dealt with
         if (settings.getMovesetsMod() == Settings.MovesetsMod.METRONOME_ONLY) {
-            romHandler.metronomeOnlyMode();
+            moveRandomizer.metronomeOnlyMode();
         }
 
         List<Trainer> trainers = romHandler.getTrainers();
@@ -532,13 +541,14 @@ public class Randomizer {
         }
 
         // Static Pokemon
+        StaticPokemonRandomizer staticPokemonRandomizer = new StaticPokemonRandomizer(random, settings, romHandler, pokemonService);
         if (romHandler.canChangeStaticPokemon()) {
             List<StaticEncounter> oldStatics = romHandler.getStaticPokemon();
             if (settings.getStaticPokemonMod() != Settings.StaticPokemonMod.UNCHANGED) { // Legendary for L
-                romHandler.randomizeStaticPokemon(settings);
+                staticPokemonRandomizer.randomizeStaticPokemon();
                 staticsChanged = true;
             } else if (settings.isStaticLevelModified()) {
-                romHandler.onlyChangeStaticLevels(settings);
+                staticPokemonRandomizer.onlyChangeStaticLevels();
                 staticsChanged = true;
             }
 
@@ -558,7 +568,7 @@ public class Randomizer {
                     settings.isRandomizeTotemHeldItems() ||
                     settings.isTotemLevelsModified()) {
 
-                romHandler.randomizeTotemPokemon(settings);
+                staticPokemonRandomizer.randomizeTotemPokemon();
                 totemsChanged = true;
             }
 
@@ -573,26 +583,28 @@ public class Randomizer {
         // 1. Update catch rates
         // 2. Randomize Wild Pokemon
 
+        EncounterRandomizer encounterRandomizer = new EncounterRandomizer(random, settings, romHandler, pokemonService);
+
         if (settings.isUseMinimumCatchRate()) {
             romHandler.changeCatchRates(settings);
         }
 
         switch (settings.getWildPokemonMod()) {
             case RANDOM:
-                romHandler.randomEncounters(settings);
+                encounterRandomizer.randomEncounters();
                 wildsChanged = true;
                 break;
             case AREA_MAPPING:
-                romHandler.area1to1Encounters(settings);
+                encounterRandomizer.area1to1Encounters();
                 wildsChanged = true;
                 break;
             case GLOBAL_MAPPING:
-                romHandler.game1to1Encounters(settings);
+                encounterRandomizer.game1to1Encounters();
                 wildsChanged = true;
                 break;
             default:
                 if (settings.isWildLevelsModified()) {
-                    romHandler.onlyChangeWildLevels(settings);
+                    encounterRandomizer.onlyChangeWildLevels();
                     wildsChanged = true;
                 }
                 break;
@@ -613,14 +625,13 @@ public class Randomizer {
             }
         }
 
-
         // In-game trades
-
+        TradesRandomizer tradesRandomizer = new TradesRandomizer(random, settings, romHandler, pokemonService);
         List<IngameTrade> oldTrades = romHandler.getIngameTrades();
         switch(settings.getInGameTradesMod()) {
             case RANDOMIZE_GIVEN:
             case RANDOMIZE_GIVEN_AND_REQUESTED:
-                romHandler.randomizeIngameTrades(settings);
+                tradesRandomizer.randomizeIngameTrades();
                 tradesChanged = true;
                 break;
             default:
@@ -673,7 +684,8 @@ public class Randomizer {
         // tpRandomizer.renderPlacementHistory();
 
         // Intro Pokemon...
-        romHandler.randomizeIntroPokemon();
+        IntroRandomizer introRandomizer = new IntroRandomizer(romHandler, pokemonService);
+        introRandomizer.randomizeIntroPokemon();
 
         // Record check value?
         romHandler.writeCheckValueToROM(checkValue);
@@ -1061,7 +1073,7 @@ public class Randomizer {
         log.println();
     }
 
-    private void logStarters(final PrintStream log) {
+    private void logStarters(final PrintStream log, final StartersRandomizer startersRandomizer) {
 
         switch(settings.getStartersMod()) {
             case CUSTOM:
@@ -1077,7 +1089,7 @@ public class Randomizer {
                 break;
         }
 
-        List<Pokemon> starters = romHandler.getPickedStarters();
+        List<Pokemon> starters = startersRandomizer.getPickedStarters();
         int i = 1;
         for (Pokemon starter: starters) {
             log.println("Set starter " + i + " to " + starter.fullName());

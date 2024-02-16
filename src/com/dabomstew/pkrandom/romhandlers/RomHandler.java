@@ -38,29 +38,13 @@ import com.dabomstew.pkrandom.pokemon.*;
 
 public interface RomHandler {
 
-    List<Pokemon> getMainPokemonList();
-
-    List<Pokemon> getMainPokemonListInclFormes();
-
-    List<Pokemon> getAltFormesList();
-
-    List<MegaEvolution> getMegaEvolutionsList();
-
-    List<Pokemon> getNoLegendaryList();
-
-    List<Pokemon> getOnlyLegendaryList();
-
-    List<Pokemon> getUltraBeastList();
-
-    List<Pokemon> getNoLegendaryListInclFormes();
-
-    List<Pokemon> getOnlyLegendaryListInclFormes();
-
-    List<Pokemon> getNoLegendaryAltsList();
-
-    List<Pokemon> getOnlyLegendaryAltsList();
-
     int getFullyEvolvedRandomSeed();
+
+    boolean isORAS();
+
+    boolean isSM();
+
+    int getPerfectAccuracy();
 
     abstract class Factory {
         public RomHandler create(Random random) {
@@ -128,8 +112,6 @@ public interface RomHandler {
     // Methods to set up Gen Restrictions
     // ==================================
 
-    void setPokemonPool(Settings settings);
-
     void removeEvosForPokemonPool();
 
     // ===============
@@ -143,14 +125,6 @@ public interface RomHandler {
     boolean hasStarterAltFormes();
 
     int starterCount();
-
-    void customStarters(Settings settings);
-
-    void randomizeStarters(Settings settings);
-
-    void randomizeBasicTwoEvosStarters(Settings settings);
-
-    List<Pokemon> getPickedStarters();
 
     boolean supportsStarterHeldItems();
 
@@ -178,30 +152,11 @@ public interface RomHandler {
 
     void standardizeEXPCurves(Settings settings);
 
-    // ====================================
-    // Methods for selecting random Pokemon
-    // ====================================
-
-    // Give a random Pokemon who's in this game
-    Pokemon randomPokemon();
-
-    Pokemon randomPokemonInclFormes();
-
-    // Give a random non-legendary Pokemon who's in this game
-    // Business rules for who's legendary are in Pokemon class
-    Pokemon randomNonLegendaryPokemon();
-
-    // Give a random legendary Pokemon who's in this game
-    // Business rules for who's legendary are in Pokemon class
-    Pokemon randomLegendaryPokemon();
-
-    // Give a random Pokemon who has 2 evolution stages
-    // Should make a good starter Pokemon
-    Pokemon random2EvosPokemon(boolean allowAltFormes);
-
     // =============
     // Pokemon Types
     // =============
+
+    void applyCamelCaseNames();
 
     boolean typeInGame(Type type);
 
@@ -240,21 +195,11 @@ public interface RomHandler {
 
     void setEncounters(boolean useTimeOfDay, List<EncounterSet> encounters);
 
-    void randomEncounters(Settings settings);
-
-    void area1to1Encounters(Settings settings);
-
-    void game1to1Encounters(Settings settings);
-
-    void onlyChangeWildLevels(Settings settings);
-
     boolean hasTimeBasedEncounters();
 
     boolean hasWildAltFormes();
 
     List<Pokemon> bannedForWildEncounters();
-
-    void randomizeWildHeldItems(Settings settings);
 
     void changeCatchRates(Settings settings);
 
@@ -274,8 +219,6 @@ public interface RomHandler {
 
     void setTrainers(List<Trainer> trainerData, boolean doubleBattleMode);
 
-    void setFormeForTrainerPokemon(TrainerPokemon tp, Pokemon pk);
-
     void randomizeTrainerHeldItems(Settings settings);
 
     List<Integer> getSensibleHeldItemsFor(TrainerPokemon tp, boolean consumableOnly, List<Move> moves, int[] pokeMoves);
@@ -283,8 +226,6 @@ public interface RomHandler {
     List<Integer> getAllConsumableHeldItems();
 
     List<Integer> getAllHeldItems();
-
-    void rivalCarriesStarter();
 
     boolean hasRivalFinalBattle();
 
@@ -340,13 +281,7 @@ public interface RomHandler {
 
     void setEggMoves(Map<Integer, List<Integer>> eggMoves);
 
-    void randomizeMovesLearnt(Settings settings);
-
-    void randomizeEggMoves(Settings settings);
-
     void orderDamagingMovesByDamage();
-
-    void metronomeOnlyMode();
 
     boolean supportsFourStartingMoves();
 
@@ -358,8 +293,6 @@ public interface RomHandler {
 
     boolean setStaticPokemon(List<StaticEncounter> staticPokemon);
 
-    void randomizeStaticPokemon(Settings settings);
-
     boolean canChangeStaticPokemon();
 
     boolean hasStaticAltFormes();
@@ -367,8 +300,6 @@ public interface RomHandler {
     List<Pokemon> bannedForStaticPokemon();
 
     boolean forceSwapStaticMegaEvos();
-
-    void onlyChangeStaticLevels(Settings settings);
 
     boolean hasMainGameLegendaries();
 
@@ -387,8 +318,6 @@ public interface RomHandler {
     List<TotemPokemon> getTotemPokemon();
 
     void setTotemPokemon(List<TotemPokemon> totemPokemon);
-
-    void randomizeTotemPokemon(Settings settings);
 
     // =========
     // TMs & HMs
@@ -580,8 +509,6 @@ public interface RomHandler {
 
     void setIngameTrades(List<IngameTrade> trades);
 
-    void randomizeIngameTrades(Settings settings);
-
     boolean hasDVs();
 
     int maxTradeNicknameLength();
@@ -605,10 +532,6 @@ public interface RomHandler {
     Set<EvolutionUpdate> getEasierEvoUpdates();
 
     Set<EvolutionUpdate> getTimeBasedEvoUpdates();
-
-    void randomizeEvolutions(Settings settings);
-
-    void randomizeEvolutionsEveryLevel(Settings settings);
 
     // In the earlier games, alt formes use the same evolutions as the base forme.
     // In later games, this was changed so that alt formes can have unique evolutions
@@ -648,9 +571,9 @@ public interface RomHandler {
 
     int internalStringLength(String string);
 
-    void randomizeIntroPokemon();
+    boolean setIntroPokemon(Pokemon pokemon);
 
-    BufferedImage getMascotImage();
+    BufferedImage getMascotImage(Pokemon mascot);
 
     int generationOfPokemon();
 
@@ -662,15 +585,15 @@ public interface RomHandler {
 
     int miscTweaksAvailable();
 
-    void applyMiscTweaks(Settings settings);
-
-    void applyMiscTweak(MiscTweak tweak);
-
     boolean isEffectivenessUpdated();
 
     // ==========================
     // Misc forme-related methods
     // ==========================
+
+    void applyMiscTweak(MiscTweak tweak);
+
+    boolean setCatchingTutorial(Pokemon player, Pokemon opponent);
 
     boolean hasFunctionalFormes();
 
@@ -684,5 +607,4 @@ public interface RomHandler {
 
     List<Pokemon> getBannedFormesForTrainerPokemon();
 
-    void checkPokemonRestrictions();
 }

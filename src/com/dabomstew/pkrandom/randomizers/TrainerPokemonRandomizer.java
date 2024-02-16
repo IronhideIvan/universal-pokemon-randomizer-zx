@@ -3,8 +3,10 @@ package com.dabomstew.pkrandom.randomizers;
 import com.dabomstew.pkrandom.MiscTweak;
 import com.dabomstew.pkrandom.Settings;
 import com.dabomstew.pkrandom.constants.Abilities;
+import com.dabomstew.pkrandom.exceptions.RandomizationException;
 import com.dabomstew.pkrandom.pokemon.*;
 import com.dabomstew.pkrandom.romhandlers.RomHandler;
+import com.dabomstew.pkrandom.services.PokemonService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,6 +16,7 @@ public class TrainerPokemonRandomizer {
     private final Random random;
     private final RomHandler romHandler;
     private final Settings settings;
+    private final PokemonService pokemonService;
 
     // Settings based variables
     boolean usePowerLevels;
@@ -45,10 +48,11 @@ public class TrainerPokemonRandomizer {
     private Map<Type, Integer> typeWeightings;
     private int totalTypeWeighting;
 
-    public TrainerPokemonRandomizer(Random random, RomHandler romHandler, Settings settings) {
+    public TrainerPokemonRandomizer(Random random, RomHandler romHandler, Settings settings, PokemonService pokemonService) {
         this.random = random;
         this.romHandler = romHandler;
         this.settings = settings;
+        this.pokemonService = pokemonService;
 
         this.usePowerLevels = settings.isTrainersUsePokemonOfSimilarStrength();
         this.weightByFrequency = settings.isTrainersMatchTypingDistribution();
@@ -90,20 +94,20 @@ public class TrainerPokemonRandomizer {
     }
 
     public void randomizeTrainerPokemon() {
-        romHandler.checkPokemonRestrictions();
+        pokemonService.checkPokemonRestrictions();
 
         this.cachedReplacementLists = new TreeMap<>();
         List<Pokemon> usedAsUniqueList = new ArrayList<>();
 
         // Set up Pokemon pool
         Map<Type, List<Pokemon>> cachedReplacementLists = new TreeMap<>();
-        List<Pokemon> cachedAllList = noLegendaries ? new ArrayList<>(romHandler.getNoLegendaryList()) : new ArrayList<>(
-                romHandler.getMainPokemonList());
+        List<Pokemon> cachedAllList = noLegendaries ? new ArrayList<>(pokemonService.getNoLegendaryList()) : new ArrayList<>(
+                pokemonService.getMainPokemonList());
         if (includeFormes) {
             if (noLegendaries) {
-                cachedAllList.addAll(romHandler.getNoLegendaryAltsList());
+                cachedAllList.addAll(pokemonService.getNoLegendaryAltsList());
             } else {
-                cachedAllList.addAll(romHandler.getAltFormesList());
+                cachedAllList.addAll(pokemonService.getAltFormesList());
             }
         }
         cachedAllList =
@@ -323,7 +327,7 @@ public class TrainerPokemonRandomizer {
                     setPlacementHistory(newPK);
                 }
                 tp.pokemon = newPK;
-                romHandler.setFormeForTrainerPokemon(tp, newPK);
+                setFormeForTrainerPokemon(tp, newPK);
                 tp.abilitySlot = romHandler.getRandomAbilitySlot(newPK);
                 tp.resetMoves = true;
 
@@ -378,7 +382,7 @@ public class TrainerPokemonRandomizer {
     public void forceFullyEvolvedTrainerPokes() {
         int minLevel = settings.getTrainersForceFullyEvolvedLevel();
 
-        romHandler.checkPokemonRestrictions();
+        pokemonService.checkPokemonRestrictions();
         List<Trainer> currentTrainers = romHandler.getTrainers();
         for (Trainer t : currentTrainers) {
             for (TrainerPokemon tp : t.pokemon) {
@@ -386,7 +390,7 @@ public class TrainerPokemonRandomizer {
                     Pokemon newPokemon = fullyEvolve(tp.pokemon, t.index);
                     if (newPokemon != tp.pokemon) {
                         tp.pokemon = newPokemon;
-                        romHandler.setFormeForTrainerPokemon(tp, newPokemon);
+                        setFormeForTrainerPokemon(tp, newPokemon);
                         tp.abilitySlot = romHandler.getValidAbilitySlotFromOriginal(newPokemon, tp.abilitySlot);
                         tp.resetMoves = true;
                     }
@@ -394,6 +398,204 @@ public class TrainerPokemonRandomizer {
             }
         }
         romHandler.setTrainers(currentTrainers, false);
+    }
+
+    public void rivalCarriesStarter() {
+        pokemonService.checkPokemonRestrictions();
+        List<Trainer> currentTrainers = romHandler.getTrainers();
+        rivalCarriesStarterUpdate(currentTrainers, "RIVAL", romHandler.isORAS() ? 0 : 1);
+        rivalCarriesStarterUpdate(currentTrainers, "FRIEND", 2);
+        romHandler.setTrainers(currentTrainers, false);
+    }
+
+    private void rivalCarriesStarterUpdate(List<Trainer> currentTrainers, String prefix, int pokemonOffset) {
+        // Find the highest rival battle #
+        int highestRivalNum = 0;
+        for (Trainer t : currentTrainers) {
+            if (t.tag != null && t.tag.startsWith(prefix)) {
+                highestRivalNum = Math.max(highestRivalNum,
+                        Integer.parseInt(t.tag.substring(prefix.length(), t.tag.indexOf('-'))));
+            }
+        }
+
+        if (highestRivalNum == 0) {
+            // This rival type not used in this game
+            return;
+        }
+
+        // Get the starters
+        // us 0 1 2 => them 0+n 1+n 2+n
+        List<Pokemon> starters = romHandler.getStarters();
+
+        // Yellow needs its own case, unfortunately.
+        if (romHandler.isYellow()) {
+            // The rival's starter is index 1
+            Pokemon rivalStarter = starters.get(1);
+            int timesEvolves = pokemonService.numEvolutions(rivalStarter, 2);
+            // Yellow does not have abilities
+            int abilitySlot = 0;
+            // Apply evolutions as appropriate
+            if (timesEvolves == 0) {
+                for (int j = 1; j <= 3; j++) {
+                    changeStarterWithTag(currentTrainers, prefix + j + "-0", rivalStarter, abilitySlot);
+                }
+                for (int j = 4; j <= 7; j++) {
+                    for (int i = 0; i < 3; i++) {
+                        changeStarterWithTag(currentTrainers, prefix + j + "-" + i, rivalStarter, abilitySlot);
+                    }
+                }
+            } else if (timesEvolves == 1) {
+                for (int j = 1; j <= 3; j++) {
+                    changeStarterWithTag(currentTrainers, prefix + j + "-0", rivalStarter, abilitySlot);
+                }
+                rivalStarter = pickRandomEvolutionOf(rivalStarter, false);
+                for (int j = 4; j <= 7; j++) {
+                    for (int i = 0; i < 3; i++) {
+                        changeStarterWithTag(currentTrainers, prefix + j + "-" + i, rivalStarter, abilitySlot);
+                    }
+                }
+            } else if (timesEvolves == 2) {
+                for (int j = 1; j <= 2; j++) {
+                    changeStarterWithTag(currentTrainers, prefix + j + "-" + 0, rivalStarter, abilitySlot);
+                }
+                rivalStarter = pickRandomEvolutionOf(rivalStarter, true);
+                changeStarterWithTag(currentTrainers, prefix + "3-0", rivalStarter, abilitySlot);
+                for (int i = 0; i < 3; i++) {
+                    changeStarterWithTag(currentTrainers, prefix + "4-" + i, rivalStarter, abilitySlot);
+                }
+                rivalStarter = pickRandomEvolutionOf(rivalStarter, false);
+                for (int j = 5; j <= 7; j++) {
+                    for (int i = 0; i < 3; i++) {
+                        changeStarterWithTag(currentTrainers, prefix + j + "-" + i, rivalStarter, abilitySlot);
+                    }
+                }
+            }
+        } else {
+            // Replace each starter as appropriate
+            // Use level to determine when to evolve, not number anymore
+            for (int i = 0; i < 3; i++) {
+                // Rival's starters are pokemonOffset over from each of ours
+                int starterToUse = (i + pokemonOffset) % 3;
+                Pokemon thisStarter = starters.get(starterToUse);
+                int timesEvolves = pokemonService.numEvolutions(thisStarter, 2);
+                int abilitySlot = romHandler.getRandomAbilitySlot(thisStarter);
+                while (abilitySlot == 3) {
+                    // Since starters never have hidden abilities, the rival's starter shouldn't either
+                    abilitySlot = romHandler.getRandomAbilitySlot(thisStarter);
+                }
+                // If a fully evolved pokemon, use throughout
+                // Otherwise split by evolutions as appropriate
+                if (timesEvolves == 0) {
+                    for (int j = 1; j <= highestRivalNum; j++) {
+                        changeStarterWithTag(currentTrainers, prefix + j + "-" + i, thisStarter, abilitySlot);
+                    }
+                } else if (timesEvolves == 1) {
+                    int j = 1;
+                    for (; j <= highestRivalNum / 2; j++) {
+                        if (getLevelOfStarter(currentTrainers, prefix + j + "-" + i) >= 30) {
+                            break;
+                        }
+                        changeStarterWithTag(currentTrainers, prefix + j + "-" + i, thisStarter, abilitySlot);
+                    }
+                    thisStarter = pickRandomEvolutionOf(thisStarter, false);
+                    int evolvedAbilitySlot = romHandler.getValidAbilitySlotFromOriginal(thisStarter, abilitySlot);
+                    for (; j <= highestRivalNum; j++) {
+                        changeStarterWithTag(currentTrainers, prefix + j + "-" + i, thisStarter, evolvedAbilitySlot);
+                    }
+                } else if (timesEvolves == 2) {
+                    int j = 1;
+                    for (; j <= highestRivalNum; j++) {
+                        if (getLevelOfStarter(currentTrainers, prefix + j + "-" + i) >= 16) {
+                            break;
+                        }
+                        changeStarterWithTag(currentTrainers, prefix + j + "-" + i, thisStarter, abilitySlot);
+                    }
+                    thisStarter = pickRandomEvolutionOf(thisStarter, true);
+                    int evolvedAbilitySlot = romHandler.getValidAbilitySlotFromOriginal(thisStarter, abilitySlot);
+                    for (; j <= highestRivalNum; j++) {
+                        if (getLevelOfStarter(currentTrainers, prefix + j + "-" + i) >= 36) {
+                            break;
+                        }
+                        changeStarterWithTag(currentTrainers, prefix + j + "-" + i, thisStarter, evolvedAbilitySlot);
+                    }
+                    thisStarter = pickRandomEvolutionOf(thisStarter, false);
+                    evolvedAbilitySlot = romHandler.getValidAbilitySlotFromOriginal(thisStarter, abilitySlot);
+                    for (; j <= highestRivalNum; j++) {
+                        changeStarterWithTag(currentTrainers, prefix + j + "-" + i, thisStarter, evolvedAbilitySlot);
+                    }
+                }
+            }
+        }
+    }
+
+    private void changeStarterWithTag(List<Trainer> currentTrainers, String tag, Pokemon starter, int abilitySlot) {
+        for (Trainer t : currentTrainers) {
+            if (t.tag != null && t.tag.equals(tag)) {
+
+                // Bingo
+                TrainerPokemon bestPoke = t.pokemon.get(0);
+
+                if (t.forceStarterPosition >= 0) {
+                    bestPoke = t.pokemon.get(t.forceStarterPosition);
+                } else {
+                    // Change the highest level pokemon, not the last.
+                    // BUT: last gets +2 lvl priority (effectively +1)
+                    // same as above, equal priority = earlier wins
+                    int trainerPkmnCount = t.pokemon.size();
+                    for (int i = 1; i < trainerPkmnCount; i++) {
+                        int levelBonus = (i == trainerPkmnCount - 1) ? 2 : 0;
+                        if (t.pokemon.get(i).level + levelBonus > bestPoke.level) {
+                            bestPoke = t.pokemon.get(i);
+                        }
+                    }
+                }
+                bestPoke.pokemon = starter;
+                setFormeForTrainerPokemon(bestPoke,starter);
+                bestPoke.resetMoves = true;
+                bestPoke.abilitySlot = abilitySlot;
+            }
+        }
+    }
+
+    private Pokemon pickRandomEvolutionOf(Pokemon base, boolean mustEvolveItself) {
+        // Used for "rival carries starter"
+        // Pick a random evolution of base Pokemon, subject to
+        // "must evolve itself" if appropriate.
+        List<Pokemon> candidates = new ArrayList<>();
+        for (Evolution ev : base.evolutionsFrom) {
+            if (!mustEvolveItself || ev.to.evolutionsFrom.size() > 0) {
+                candidates.add(ev.to);
+            }
+        }
+
+        if (candidates.size() == 0) {
+            throw new RandomizationException("Random evolution called on a Pokemon without any usable evolutions.");
+        }
+
+        return candidates.get(random.nextInt(candidates.size()));
+    }
+
+    private int getLevelOfStarter(List<Trainer> currentTrainers, String tag) {
+        for (Trainer t : currentTrainers) {
+            if (t.tag != null && t.tag.equals(tag)) {
+                // Bingo, get highest level
+                // last pokemon is given priority +2 but equal priority
+                // = first pokemon wins, so its effectively +1
+                // If it's tagged the same we can assume it's the same team
+                // just the opposite gender or something like that...
+                // So no need to check other trainers with same tag.
+                int highestLevel = t.pokemon.get(0).level;
+                int trainerPkmnCount = t.pokemon.size();
+                for (int i = 1; i < trainerPkmnCount; i++) {
+                    int levelBonus = (i == trainerPkmnCount - 1) ? 2 : 0;
+                    if (t.pokemon.get(i).level + levelBonus > highestLevel) {
+                        highestLevel = t.pokemon.get(i).level;
+                    }
+                }
+                return highestLevel;
+            }
+        }
+        return 0;
     }
 
     private Pokemon pickTrainerPokeReplacement(TrainerPokemon tp, Pokemon oldPoke, Type type, List<Pokemon> pickFromList, boolean usePlacementHistory) {
@@ -404,7 +606,7 @@ public class TrainerPokemonRandomizer {
         boolean swapThisMegaEvo = swapMegaEvos && tp.canMegaEvolve();
 
         if (swapThisMegaEvo) {
-            pickFrom = romHandler.getMegaEvolutionsList()
+            pickFrom = pokemonService.getMegaEvolutionsList()
                     .stream()
                     .filter(mega -> mega.method == 1)
                     .map(mega -> mega.from)
@@ -638,6 +840,21 @@ public class TrainerPokemonRandomizer {
             return null;
         } else {
             return romHandler.randomType();
+        }
+    }
+
+    private void setFormeForTrainerPokemon(TrainerPokemon tp, Pokemon pk) {
+        tp.formeSuffix = "";
+        tp.forme = 0;
+        if (pk.formeNumber > 0) {
+            tp.forme = pk.formeNumber;
+            tp.formeSuffix = pk.formeSuffix;
+            tp.pokemon = pk.baseForme;
+        }
+        else if (tp.pokemon.cosmeticForms > 0) {
+            tp.forme = tp.pokemon.getCosmeticFormNumber(this.random.nextInt(tp.pokemon.cosmeticForms));
+        } else if (pk.cosmeticForms > 0) {
+            tp.forme += pk.getCosmeticFormNumber(this.random.nextInt(pk.cosmeticForms));
         }
     }
 }
