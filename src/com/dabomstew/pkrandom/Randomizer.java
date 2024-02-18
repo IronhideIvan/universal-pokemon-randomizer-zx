@@ -616,6 +616,8 @@ public class Randomizer {
             log.println("Wild Pokemon: Unchanged." + NEWLINE);
         }
 
+        logUnobtainableWildPokemon(log, pokemonService);
+
         boolean useTimeBasedEncounters = settings.isUseTimeBasedEncounters() ||
                 (settings.getWildPokemonMod() == Settings.WildPokemonMod.UNCHANGED && settings.isWildLevelsModified());
         List<EncounterSet> encounters = romHandler.getEncounters(useTimeBasedEncounters);
@@ -1330,6 +1332,30 @@ public class Randomizer {
             }
             log.println();
         }
+        log.println();
+    }
+
+    private void logUnobtainableWildPokemon(final PrintStream log, final PokemonService pokemonService) {
+        log.println("-- Unobtainable Wild Pokemon --");
+
+        Set<Pokemon> foundPokemon = new TreeSet<>();
+        List<EncounterSet> encounterSets = romHandler.getEncounters(settings.isUseTimeBasedEncounters());
+
+        for(EncounterSet area: encounterSets) {
+            for(Encounter enc : area.encounters) {
+                if(!foundPokemon.contains(enc.pokemon)) {
+                    foundPokemon.add(enc.pokemon);
+                }
+            }
+        }
+
+        List<Pokemon> allPokemon = pokemonService.getMainPokemonList();
+        for(Pokemon p: allPokemon) {
+            if(!foundPokemon.contains(p)) {
+                log.println("[" + p.number + "] " + p.fullName());
+            }
+        }
+
         log.println();
     }
 
