@@ -112,7 +112,7 @@ public interface RomHandler {
     // Methods to set up Gen Restrictions
     // ==================================
 
-    void removeEvosForPokemonPool();
+    void removeEvosForPokemonPool(List<Pokemon> pokemonPool);
 
     // ===============
     // Starter Pokemon
@@ -596,15 +596,5 @@ public interface RomHandler {
     boolean setCatchingTutorial(Pokemon player, Pokemon opponent);
 
     boolean hasFunctionalFormes();
-
-    List<Pokemon> pokemonOfType(Type type, boolean noLegendaries);
-
-    List<Pokemon> pokemonOfTypeInclFormes(Type type, boolean noLegendaries);
-
-    List<Pokemon> getAbilityDependentFormes();
-
-    List<Pokemon> getBannedFormesForPlayerPokemon();
-
-    List<Pokemon> getBannedFormesForTrainerPokemon();
 
 }

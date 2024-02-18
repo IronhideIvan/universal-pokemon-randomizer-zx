@@ -3929,16 +3929,15 @@ public class Gen5RomHandler extends AbstractDSRomHandler {
     }
 
     @Override
-    public void removeEvosForPokemonPool() {
+    public void removeEvosForPokemonPool(List<Pokemon> pokemonPool) {
         // slightly more complicated than gen2/3
         // we have to update a "baby table" too
-        List<Pokemon> pokemonIncluded = this.mainPokemonList;
         Set<Evolution> keepEvos = new HashSet<>();
         for (Pokemon pk : pokes) {
             if (pk != null) {
                 keepEvos.clear();
                 for (Evolution evol : pk.evolutionsFrom) {
-                    if (pokemonIncluded.contains(evol.from) && pokemonIncluded.contains(evol.to)) {
+                    if (pokemonPool.contains(evol.from) && pokemonPool.contains(evol.to)) {
                         keepEvos.add(evol);
                     } else {
                         evol.to.evolutionsTo.remove(evol);

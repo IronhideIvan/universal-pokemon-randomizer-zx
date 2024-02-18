@@ -2,10 +2,7 @@ package com.dabomstew.pkrandom.services;
 
 import com.dabomstew.pkrandom.Settings;
 import com.dabomstew.pkrandom.constants.*;
-import com.dabomstew.pkrandom.pokemon.Evolution;
-import com.dabomstew.pkrandom.pokemon.GenRestrictions;
-import com.dabomstew.pkrandom.pokemon.MegaEvolution;
-import com.dabomstew.pkrandom.pokemon.Pokemon;
+import com.dabomstew.pkrandom.pokemon.*;
 import com.dabomstew.pkrandom.romhandlers.RomHandler;
 
 import java.util.*;
@@ -172,6 +169,88 @@ public class PokemonService {
             }
         }
         return null;
+    }
+
+    public List<Pokemon> getAbilityDependentFormes() {
+        List<Pokemon> abilityDependentFormes = new ArrayList<>();
+        for (int i = 0; i < mainPokemonListInclFormes.size(); i++) {
+            Pokemon pokemon = mainPokemonListInclFormes.get(i);
+            if (pokemon.baseForme != null) {
+                if (pokemon.baseForme.number == Species.castform) {
+                    // All alternate Castform formes
+                    abilityDependentFormes.add(pokemon);
+                } else if (pokemon.baseForme.number == Species.darmanitan && pokemon.formeNumber == 1) {
+                    // Damanitan-Z
+                    abilityDependentFormes.add(pokemon);
+                } else if (pokemon.baseForme.number == Species.aegislash) {
+                    // Aegislash-B
+                    abilityDependentFormes.add(pokemon);
+                } else if (pokemon.baseForme.number == Species.wishiwashi) {
+                    // Wishiwashi-S
+                    abilityDependentFormes.add(pokemon);
+                }
+            }
+        }
+        return abilityDependentFormes;
+    }
+
+    public List<Pokemon> getBannedFormesForPlayerPokemon() {
+        List<Pokemon> bannedFormes = new ArrayList<>();
+        for (int i = 0; i < mainPokemonListInclFormes.size(); i++) {
+            Pokemon pokemon = mainPokemonListInclFormes.get(i);
+            if (pokemon.baseForme != null) {
+                if (pokemon.baseForme.number == Species.giratina) {
+                    // Giratina-O is banned because it reverts back to Altered Forme if
+                    // equipped with any item that isn't the Griseous Orb.
+                    bannedFormes.add(pokemon);
+                } else if (pokemon.baseForme.number == Species.shaymin) {
+                    // Shaymin-S is banned because it reverts back to its original forme
+                    // under a variety of circumstances, and can only be changed back
+                    // with the Gracidea.
+                    bannedFormes.add(pokemon);
+                }
+            }
+        }
+        return bannedFormes;
+    }
+
+    public List<Pokemon> getBannedFormesForTrainerPokemon() {
+        List<Pokemon> banned = new ArrayList<>();
+        for (int i = 0; i < mainPokemonListInclFormes.size(); i++) {
+            Pokemon pokemon = mainPokemonListInclFormes.get(i);
+            if (pokemon.baseForme != null) {
+                if (pokemon.baseForme.number == Species.giratina) {
+                    // Giratina-O is banned because it reverts back to Altered Forme if
+                    // equipped with any item that isn't the Griseous Orb.
+                    banned.add(pokemon);
+                }
+            }
+        }
+        return banned;
+    }
+
+    public List<Pokemon> pokemonOfType(Type type, boolean noLegendaries) {
+        List<Pokemon> typedPokes = new ArrayList<>();
+        for (Pokemon pk : mainPokemonList) {
+            if (pk != null && (!noLegendaries || !pk.isLegendary()) && !pk.actuallyCosmetic) {
+                if (pk.primaryType == type || pk.secondaryType == type) {
+                    typedPokes.add(pk);
+                }
+            }
+        }
+        return typedPokes;
+    }
+
+    public List<Pokemon> pokemonOfTypeInclFormes(Type type, boolean noLegendaries) {
+        List<Pokemon> typedPokes = new ArrayList<>();
+        for (Pokemon pk : mainPokemonListInclFormes) {
+            if (pk != null && !pk.actuallyCosmetic && (!noLegendaries || !pk.isLegendary())) {
+                if (pk.primaryType == type || pk.secondaryType == type) {
+                    typedPokes.add(pk);
+                }
+            }
+        }
+        return typedPokes;
     }
 
     private void addEvolutionaryRelatives(List<Pokemon> pokemonPool) {

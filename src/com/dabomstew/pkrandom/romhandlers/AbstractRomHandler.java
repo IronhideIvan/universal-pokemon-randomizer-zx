@@ -38,9 +38,6 @@ import com.dabomstew.pkrandom.exceptions.RandomizationException;
 import com.dabomstew.pkrandom.pokemon.*;
 
 public abstract class AbstractRomHandler implements RomHandler {
-
-    protected List<Pokemon> mainPokemonList;
-    protected List<Pokemon> mainPokemonListInclFormes;
     protected final Random random;
     private final Random cosmeticRandom;
     protected PrintStream logStream;
@@ -3156,110 +3153,6 @@ public abstract class AbstractRomHandler implements RomHandler {
         copyUpEvolutionsHelper(bpAction, epAction, null, false);
     }
 
-    @Override
-    public List<Pokemon> pokemonOfType(Type type, boolean noLegendaries) {
-        List<Pokemon> typedPokes = new ArrayList<>();
-        for (Pokemon pk : mainPokemonList) {
-            if (pk != null && (!noLegendaries || !pk.isLegendary()) && !pk.actuallyCosmetic) {
-                if (pk.primaryType == type || pk.secondaryType == type) {
-                    typedPokes.add(pk);
-                }
-            }
-        }
-        return typedPokes;
-    }
-
-    @Override
-    public List<Pokemon> pokemonOfTypeInclFormes(Type type, boolean noLegendaries) {
-        List<Pokemon> typedPokes = new ArrayList<>();
-        for (Pokemon pk : mainPokemonListInclFormes) {
-            if (pk != null && !pk.actuallyCosmetic && (!noLegendaries || !pk.isLegendary())) {
-                if (pk.primaryType == type || pk.secondaryType == type) {
-                    typedPokes.add(pk);
-                }
-            }
-        }
-        return typedPokes;
-    }
-
-    private Map<Type, Integer> typeWeightings;
-    private int totalTypeWeighting;
-
-    private Type pickType(boolean weightByFrequency, boolean noLegendaries, boolean allowAltFormes) {
-        if (totalTypeWeighting == 0) {
-            // Determine weightings
-            for (Type t : Type.values()) {
-                if (typeInGame(t)) {
-                    List<Pokemon> pokemonOfType = allowAltFormes ? pokemonOfTypeInclFormes(t, noLegendaries) :
-                            pokemonOfType(t, noLegendaries);
-                    int pkWithTyping = pokemonOfType.size();
-                    typeWeightings.put(t, pkWithTyping);
-                    totalTypeWeighting += pkWithTyping;
-                }
-            }
-        }
-
-        if (weightByFrequency) {
-            int typePick = this.random.nextInt(totalTypeWeighting);
-            int typePos = 0;
-            for (Type t : typeWeightings.keySet()) {
-                int weight = typeWeightings.get(t);
-                if (typePos + weight > typePick) {
-                    return t;
-                }
-                typePos += weight;
-            }
-            return null;
-        } else {
-            return randomType();
-        }
-    }
-
-    @Override
-    public List<Pokemon> getAbilityDependentFormes() {
-        List<Pokemon> abilityDependentFormes = new ArrayList<>();
-        for (int i = 0; i < mainPokemonListInclFormes.size(); i++) {
-            Pokemon pokemon = mainPokemonListInclFormes.get(i);
-            if (pokemon.baseForme != null) {
-                if (pokemon.baseForme.number == Species.castform) {
-                    // All alternate Castform formes
-                    abilityDependentFormes.add(pokemon);
-                } else if (pokemon.baseForme.number == Species.darmanitan && pokemon.formeNumber == 1) {
-                    // Damanitan-Z
-                    abilityDependentFormes.add(pokemon);
-                } else if (pokemon.baseForme.number == Species.aegislash) {
-                    // Aegislash-B
-                    abilityDependentFormes.add(pokemon);
-                } else if (pokemon.baseForme.number == Species.wishiwashi) {
-                    // Wishiwashi-S
-                    abilityDependentFormes.add(pokemon);
-                }
-            }
-        }
-        return abilityDependentFormes;
-    }
-
-    @Override
-    public List<Pokemon> getBannedFormesForPlayerPokemon() {
-        List<Pokemon> bannedFormes = new ArrayList<>();
-        for (int i = 0; i < mainPokemonListInclFormes.size(); i++) {
-            Pokemon pokemon = mainPokemonListInclFormes.get(i);
-            if (pokemon.baseForme != null) {
-                if (pokemon.baseForme.number == Species.giratina) {
-                    // Giratina-O is banned because it reverts back to Altered Forme if
-                    // equipped with any item that isn't the Griseous Orb.
-                    bannedFormes.add(pokemon);
-                } else if (pokemon.baseForme.number == Species.shaymin) {
-                    // Shaymin-S is banned because it reverts back to its original forme
-                    // under a variety of circumstances, and can only be changed back
-                    // with the Gracidea.
-                    bannedFormes.add(pokemon);
-                }
-            }
-        }
-        return bannedFormes;
-    }
-
     /* Helper methods used by subclasses and/or this class */
 
     @Override
@@ -3464,11 +3357,6 @@ public abstract class AbstractRomHandler implements RomHandler {
     @Override
     public List<Integer> getAllHeldItems() {
         return Arrays.asList(0);
-    }
-
-    @Override
-    public List<Pokemon> getBannedFormesForTrainerPokemon() {
-        return new ArrayList<>();
     }
 
     @Override

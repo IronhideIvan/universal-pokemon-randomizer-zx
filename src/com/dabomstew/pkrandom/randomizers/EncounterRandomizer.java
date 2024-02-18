@@ -63,9 +63,9 @@ public class EncounterRandomizer {
                     : new ArrayList<>(pokemonService.getMainPokemonList());
         }
         List<Pokemon> banned = romHandler.bannedForWildEncounters();
-        banned.addAll(romHandler.getBannedFormesForPlayerPokemon());
+        banned.addAll(pokemonService.getBannedFormesForPlayerPokemon());
         if (!abilitiesAreRandomized) {
-            List<Pokemon> abilityDependentFormes = romHandler.getAbilityDependentFormes();
+            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
             banned.addAll(abilityDependentFormes);
         }
         if (banIrregularAltFormes) {
@@ -199,9 +199,9 @@ public class EncounterRandomizer {
         Collections.shuffle(scrambledEncounters, this.random);
 
         List<Pokemon> banned = romHandler.bannedForWildEncounters();
-        banned.addAll(romHandler.getBannedFormesForPlayerPokemon());
+        banned.addAll(pokemonService.getBannedFormesForPlayerPokemon());
         if (!abilitiesAreRandomized) {
-            List<Pokemon> abilityDependentFormes = romHandler.getAbilityDependentFormes();
+            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
             banned.addAll(abilityDependentFormes);
         }
         if (banIrregularAltFormes) {
@@ -289,8 +289,8 @@ public class EncounterRandomizer {
                 while (possiblePokemon == null && iterLoops < 10000) {
                     Type areaTheme = romHandler.randomType();
                     if (!cachedPokeLists.containsKey(areaTheme)) {
-                        List<Pokemon> pType = allowAltFormes ? romHandler.pokemonOfTypeInclFormes(areaTheme, noLegendaries) :
-                                romHandler.pokemonOfType(areaTheme, noLegendaries);
+                        List<Pokemon> pType = allowAltFormes ? pokemonService.pokemonOfTypeInclFormes(areaTheme, noLegendaries) :
+                                pokemonService.pokemonOfType(areaTheme, noLegendaries);
                         pType.removeAll(banned);
                         cachedPokeLists.put(areaTheme, pType);
                     }
@@ -479,7 +479,7 @@ public class EncounterRandomizer {
 
         List<Pokemon> banned = romHandler.bannedForWildEncounters();
         if (!abilitiesAreRandomized) {
-            List<Pokemon> abilityDependentFormes = romHandler.getAbilityDependentFormes();
+            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
             banned.addAll(abilityDependentFormes);
         }
         if (banIrregularAltFormes) {
@@ -509,8 +509,8 @@ public class EncounterRandomizer {
                         while (possiblePokemon == null && iterLoops < 10000) {
                             Type areaTheme = romHandler.randomType();
                             if (!cachedPokeLists.containsKey(areaTheme)) {
-                                List<Pokemon> pType = allowAltFormes ? romHandler.pokemonOfTypeInclFormes(areaTheme, noLegendaries) :
-                                        romHandler.pokemonOfType(areaTheme, noLegendaries);
+                                List<Pokemon> pType = allowAltFormes ? pokemonService.pokemonOfTypeInclFormes(areaTheme, noLegendaries) :
+                                        pokemonService.pokemonOfType(areaTheme, noLegendaries);
                                 pType.removeAll(banned);
                                 cachedPokeLists.put(areaTheme, pType);
                             }
@@ -597,8 +597,8 @@ public class EncounterRandomizer {
                     List<Pokemon> possiblePokemon = null;
                     Type areaTheme = getTypeForArea(area);
                     if (!cachedPokeLists.containsKey(areaTheme)) {
-                        List<Pokemon> pType = allowAltFormes ? romHandler.pokemonOfTypeInclFormes(areaTheme, noLegendaries) :
-                                romHandler.pokemonOfType(areaTheme, noLegendaries);
+                        List<Pokemon> pType = allowAltFormes ? pokemonService.pokemonOfTypeInclFormes(areaTheme, noLegendaries) :
+                                pokemonService.pokemonOfType(areaTheme, noLegendaries);
                         pType.removeAll(banned);
                         cachedPokeLists.put(areaTheme, pType);
                     }
@@ -663,9 +663,9 @@ public class EncounterRandomizer {
 
         pokemonService.checkPokemonRestrictions();
         List<Pokemon> banned = romHandler.bannedForWildEncounters();
-        banned.addAll(romHandler.getBannedFormesForPlayerPokemon());
+        banned.addAll(pokemonService.getBannedFormesForPlayerPokemon());
         if (!abilitiesAreRandomized) {
-            List<Pokemon> abilityDependentFormes = romHandler.getAbilityDependentFormes();
+            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
             banned.addAll(abilityDependentFormes);
         }
         if (banIrregularAltFormes) {
@@ -765,8 +765,8 @@ public class EncounterRandomizer {
                 while (possiblePokemon == null && iterLoops < 10000) {
                     Type areaTheme = romHandler.randomType();
                     if (!cachedPokeLists.containsKey(areaTheme)) {
-                        List<Pokemon> pType = allowAltFormes ? romHandler.pokemonOfTypeInclFormes(areaTheme, noLegendaries) :
-                                romHandler.pokemonOfType(areaTheme, noLegendaries);
+                        List<Pokemon> pType = allowAltFormes ? pokemonService.pokemonOfTypeInclFormes(areaTheme, noLegendaries) :
+                                pokemonService.pokemonOfType(areaTheme, noLegendaries);
                         pType.removeAll(banned);
                         cachedPokeLists.put(areaTheme, pType);
                     }

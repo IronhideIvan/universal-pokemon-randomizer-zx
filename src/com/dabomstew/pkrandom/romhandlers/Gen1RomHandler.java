@@ -2652,7 +2652,7 @@ public class Gen1RomHandler extends AbstractGBCRomHandler {
     }
 
     @Override
-    public void removeEvosForPokemonPool() {
+    public void removeEvosForPokemonPool(List<Pokemon> pokemonPool) {
         // gen1 doesn't have this functionality anyway
     }
 

@@ -109,7 +109,7 @@ public class Randomizer {
         // 2. If limited, remove evolutions that are outside of the pool
 
         if (settings.isLimitPokemon()) {
-            romHandler.removeEvosForPokemonPool();
+            romHandler.removeEvosForPokemonPool(pokemonService.getMainPokemonListInclFormes());
         }
 
         // Move updates & data changes

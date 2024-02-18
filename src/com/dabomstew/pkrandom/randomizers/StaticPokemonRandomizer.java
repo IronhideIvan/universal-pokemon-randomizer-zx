@@ -56,9 +56,9 @@ public class StaticPokemonRandomizer {
         List<StaticEncounter> currentStaticPokemon = romHandler.getStaticPokemon();
         List<StaticEncounter> replacements = new ArrayList<>();
         List<Pokemon> banned = romHandler.bannedForStaticPokemon();
-        banned.addAll(romHandler.getBannedFormesForPlayerPokemon());
+        banned.addAll(pokemonService.getBannedFormesForPlayerPokemon());
         if (!abilitiesAreRandomized) {
-            List<Pokemon> abilityDependentFormes = romHandler.getAbilityDependentFormes();
+            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
             banned.addAll(abilityDependentFormes);
         }
         if (banIrregularAltFormes) {
@@ -335,7 +335,7 @@ public class StaticPokemonRandomizer {
         List<TotemPokemon> replacements = new ArrayList<>();
         List<Pokemon> banned = romHandler.bannedForStaticPokemon();
         if (!abilitiesAreRandomized) {
-            List<Pokemon> abilityDependentFormes = romHandler.getAbilityDependentFormes();
+            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
             banned.addAll(abilityDependentFormes);
         }
         if (banIrregularAltFormes) {

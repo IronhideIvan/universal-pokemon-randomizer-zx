@@ -47,9 +47,9 @@ public class EvolutionsRandomizer {
         List<Pokemon> actuallyCosmeticPokemonPool = new ArrayList<>();
         int stageLimit = limitToThreeStages ? 3 : 10;
 
-        List<Pokemon> banned = romHandler.getBannedFormesForPlayerPokemon();
+        List<Pokemon> banned = pokemonService.getBannedFormesForPlayerPokemon();
         if (!abilitiesAreRandomized) {
-            List<Pokemon> abilityDependentFormes = romHandler.getAbilityDependentFormes();
+            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
             banned.addAll(abilityDependentFormes);
         }
         if (banIrregularAltFormes) {
@@ -289,9 +289,9 @@ public class EvolutionsRandomizer {
         }
         List<Pokemon> actuallyCosmeticPokemonPool = new ArrayList<>();
 
-        List<Pokemon> banned = romHandler.getBannedFormesForPlayerPokemon();
+        List<Pokemon> banned = pokemonService.getBannedFormesForPlayerPokemon();
         if (!abilitiesAreRandomized) {
-            List<Pokemon> abilityDependentFormes = romHandler.getAbilityDependentFormes();
+            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
             banned.addAll(abilityDependentFormes);
         }
 

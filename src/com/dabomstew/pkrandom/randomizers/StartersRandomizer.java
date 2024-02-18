@@ -37,10 +37,10 @@ public class StartersRandomizer {
                 .filter(pk -> pk == null || !pk.actuallyCosmetic)
                 .collect(Collectors.toList());
 
-        List<Pokemon> banned = romHandler.getBannedFormesForPlayerPokemon();
+        List<Pokemon> banned = pokemonService.getBannedFormesForPlayerPokemon();
         pickedStarters = new ArrayList<>();
         if (abilitiesUnchanged) {
-            List<Pokemon> abilityDependentFormes = romHandler.getAbilityDependentFormes();
+            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
             banned.addAll(abilityDependentFormes);
         }
         if (banIrregularAltFormes) {
@@ -109,9 +109,9 @@ public class StartersRandomizer {
 
         int starterCount = romHandler.starterCount();
         pickedStarters = new ArrayList<>();
-        List<Pokemon> banned = romHandler.getBannedFormesForPlayerPokemon();
+        List<Pokemon> banned = pokemonService.getBannedFormesForPlayerPokemon();
         if (abilitiesUnchanged) {
-            List<Pokemon> abilityDependentFormes = romHandler.getAbilityDependentFormes();
+            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
             banned.addAll(abilityDependentFormes);
         }
         if (banIrregularAltFormes) {
@@ -139,9 +139,9 @@ public class StartersRandomizer {
 
         int starterCount = romHandler.starterCount();
         pickedStarters = new ArrayList<>();
-        List<Pokemon> banned = romHandler.getBannedFormesForPlayerPokemon();
+        List<Pokemon> banned = pokemonService.getBannedFormesForPlayerPokemon();
         if (abilitiesUnchanged) {
-            List<Pokemon> abilityDependentFormes = romHandler.getAbilityDependentFormes();
+            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
             banned.addAll(abilityDependentFormes);
         }
         if (banIrregularAltFormes) {

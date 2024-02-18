@@ -116,9 +116,9 @@ public class TrainerPokemonRandomizer {
                         .filter(pk -> !pk.actuallyCosmetic)
                         .collect(Collectors.toList());
 
-        List<Pokemon> banned = romHandler.getBannedFormesForTrainerPokemon();
+        List<Pokemon> banned = pokemonService.getBannedFormesForTrainerPokemon();
         if (!abilitiesAreRandomized) {
-            List<Pokemon> abilityDependentFormes = romHandler.getAbilityDependentFormes();
+            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
             banned.addAll(abilityDependentFormes);
         }
         if (banIrregularAltFormes) {
@@ -264,8 +264,8 @@ public class TrainerPokemonRandomizer {
 
             List<Pokemon> evolvesIntoTheWrongType = new ArrayList<>();
             if (typeForTrainer != null) {
-                List<Pokemon> pokemonOfType = includeFormes ? romHandler.pokemonOfTypeInclFormes(typeForTrainer, noLegendaries) :
-                        romHandler.pokemonOfType(typeForTrainer, noLegendaries);
+                List<Pokemon> pokemonOfType = includeFormes ? pokemonService.pokemonOfTypeInclFormes(typeForTrainer, noLegendaries) :
+                        pokemonService.pokemonOfType(typeForTrainer, noLegendaries);
                 for (Pokemon pk : pokemonOfType) {
                     if (!pokemonOfType.contains(fullyEvolve(pk, t.index))) {
                         evolvesIntoTheWrongType.add(pk);
@@ -629,11 +629,11 @@ public class TrainerPokemonRandomizer {
         } else if (type != null && cachedReplacementLists != null) {
             // "Type Themed" settings
             if (!cachedReplacementLists.containsKey(type)) {
-                List<Pokemon> pokemonOfType = includeFormes ? romHandler.pokemonOfTypeInclFormes(type, noLegendaries) :
-                        romHandler.pokemonOfType(type, noLegendaries);
-                pokemonOfType.removeAll(romHandler.getBannedFormesForPlayerPokemon());
+                List<Pokemon> pokemonOfType = includeFormes ? pokemonService.pokemonOfTypeInclFormes(type, noLegendaries) :
+                        pokemonService.pokemonOfType(type, noLegendaries);
+                pokemonOfType.removeAll(pokemonService.getBannedFormesForPlayerPokemon());
                 if (!abilitiesAreRandomized) {
-                    List<Pokemon> abilityDependentFormes = romHandler.getAbilityDependentFormes();
+                    List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
                     pokemonOfType.removeAll(abilityDependentFormes);
                 }
                 if (banIrregularAltFormes) {
@@ -818,8 +818,8 @@ public class TrainerPokemonRandomizer {
             // Determine weightings
             for (Type t : Type.values()) {
                 if (romHandler.typeInGame(t))  {
-                    List<Pokemon> pokemonOfType = allowAltFormes ?  romHandler.pokemonOfTypeInclFormes(t, noLegendaries) :
-                            romHandler.pokemonOfType(t, noLegendaries);
+                    List<Pokemon> pokemonOfType = allowAltFormes ?  pokemonService.pokemonOfTypeInclFormes(t, noLegendaries) :
+                            pokemonService.pokemonOfType(t, noLegendaries);
                     int pkWithTyping = pokemonOfType.size();
                     typeWeightings.put(t, pkWithTyping);
                     totalTypeWeighting += pkWithTyping;

@@ -3118,20 +3118,6 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
     }
 
     @Override
-    public List<Pokemon> getBannedFormesForTrainerPokemon() {
-        List<Pokemon> banned = new ArrayList<>();
-        if (romEntry.romType != Gen4Constants.Type_DP) {
-            Pokemon giratinaOrigin = this.getAltFormeOfPokemon(pokes[Species.giratina], 1);
-            if (giratinaOrigin != null) {
-                // Ban Giratina-O for trainers in Gen 4, since he just instantly transforms
-                // back to Altered Forme if he's not holding the Griseous Orb.
-                banned.add(giratinaOrigin);
-            }
-        }
-        return banned;
-    }
-
-    @Override
     public Map<Integer, List<MoveLearnt>> getMovesLearnt() {
         Map<Integer, List<MoveLearnt>> movesets = new TreeMap<>();
         try {
@@ -5210,16 +5196,15 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
     }
 
     @Override
-    public void removeEvosForPokemonPool() {
+    public void removeEvosForPokemonPool(List<Pokemon> pokemonPool) {
         // slightly more complicated than gen2/3
         // we have to update a "baby table" too
-        List<Pokemon> pokemonIncluded = this.mainPokemonList;
         Set<Evolution> keepEvos = new HashSet<>();
         for (Pokemon pk : pokes) {
             if (pk != null) {
                 keepEvos.clear();
                 for (Evolution evol : pk.evolutionsFrom) {
-                    if (pokemonIncluded.contains(evol.from) && pokemonIncluded.contains(evol.to)) {
+                    if (pokemonPool.contains(evol.from) && pokemonPool.contains(evol.to)) {
                         keepEvos.add(evol);
                     } else {
                         evol.to.evolutionsTo.remove(evol);
