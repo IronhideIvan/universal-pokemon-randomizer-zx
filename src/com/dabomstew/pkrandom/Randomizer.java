@@ -1186,7 +1186,7 @@ public class Randomizer {
             }
 
             String[] itemNames = romHandler.getItemNames();
-            if (logTrainerMovesets) {
+            if (logTrainerMovesets && t.pokemonHaveCustomMoves()) {
                 log.println();
                 for (TrainerPokemon tpk : t.pokemon) {
                     List<Move> moves = romHandler.getMoves();
@@ -1207,6 +1207,9 @@ public class Randomizer {
                 }
             } else {
                 log.print(" - ");
+                if(logTrainerMovesets) {
+                    log.print("NO CUSTOM MOVES - ");
+                }
                 boolean first = true;
                 for (TrainerPokemon tpk : t.pokemon) {
                     if (!first) {

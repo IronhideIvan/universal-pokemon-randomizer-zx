@@ -1957,6 +1957,26 @@
                       <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.tpGiveUberTrainersOnlyLegendariesCheckBox.toolTipText"/>
                     </properties>
                   </component>
+                  <component id="dc3fa" class="javax.swing.JCheckBox" binding="tpMovesetMinLevelCheckBox">
+                    <constraints>
+                      <grid row="3" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                      <gridbag weightx="0.0" weighty="0.0"/>
+                    </constraints>
+                    <properties>
+                      <enabled value="false"/>
+                      <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.tpMovesetMinLevelCheckBox.text"/>
+                      <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.tpMovesetMinLevelCheckBox.toolTipText"/>
+                    </properties>
+                  </component>
+                  <component id="db7dd" class="javax.swing.JSpinner" binding="tpMovesetMinLevelSpinner">
+                    <constraints>
+                      <grid row="3" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                      <gridbag top="0" left="4" bottom="0" right="0" weightx="0.0" weighty="0.0" ipadx="10"/>
+                    </constraints>
+                    <properties>
+                      <enabled value="false"/>
+                    </properties>
+                  </component>
                 </children>
               </grid>
               <hspacer id="66d2">

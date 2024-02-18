@@ -781,6 +781,20 @@ public abstract class AbstractRomHandler implements RomHandler {
         List<Trainer> trainers = getTrainers();
 
         for (Trainer t: trainers) {
+
+            // Check the average level of the pokemon for the trainer, if they are
+            // lower than the set minimum then don't assign their pokemon custom moves.
+            if(settings.getBetterMovesetsMinLevel() > 0) {
+                int totalLevel = 0;
+                for(TrainerPokemon tp: t.pokemon) {
+                    totalLevel += tp.level;
+                }
+                int average = totalLevel / t.pokemon.size();
+                if(average < settings.getBetterMovesetsMinLevel()) {
+                    continue;
+                }
+            }
+
             t.setPokemonHaveCustomMoves(true);
 
             for (TrainerPokemon tp: t.pokemon) {

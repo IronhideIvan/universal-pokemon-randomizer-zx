@@ -192,6 +192,7 @@ public class Settings {
     private boolean doubleBattleMode;
     private boolean shinyChance;
     private boolean betterTrainerMovesets;
+    private int betterMovesetsMinLevel;
 
     private boolean giveUberTrainersLegendaries;
 
@@ -595,6 +596,9 @@ public class Settings {
                 noWildStaticPokemon,
                 wildPokemonMod == WildPokemonMod.VANILLA_THEMED));
 
+        // 52 better movesets min level
+        out.write(betterMovesetsMinLevel);
+
         try {
             byte[] romName = this.romName.getBytes("US-ASCII");
             out.write(romName.length);
@@ -892,6 +896,8 @@ public class Settings {
         settings.setGiveUberTrainersLegendaries(restoreState(data[51], 0));
         settings.setNoWildStarters(restoreState(data[51], 1));
         settings.setNoWildStaticPokemon(restoreState(data[51], 2));
+
+        settings.setBetterMovesetsMinLevel(data[52]);
 
         int romNameLength = data[LENGTH_OF_SETTINGS_DATA] & 0xFF;
         String romName = new String(data, LENGTH_OF_SETTINGS_DATA + 1, romNameLength, "US-ASCII");
@@ -2356,6 +2362,14 @@ public class Settings {
 
     public void setNoWildStaticPokemon(boolean noWildStaticPokemon) {
         this.noWildStaticPokemon = noWildStaticPokemon;
+    }
+
+    public int getBetterMovesetsMinLevel() {
+        return betterMovesetsMinLevel;
+    }
+
+    public void setBetterMovesetsMinLevel(int betterMovesetsMinLevel) {
+        this.betterMovesetsMinLevel = betterMovesetsMinLevel;
     }
 
     private static int makeByteSelected(boolean... bools) {
