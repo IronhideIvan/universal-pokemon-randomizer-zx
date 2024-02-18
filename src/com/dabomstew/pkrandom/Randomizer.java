@@ -27,6 +27,7 @@ package com.dabomstew.pkrandom;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import com.dabomstew.pkrandom.pokemon.*;
@@ -78,6 +79,7 @@ public class Randomizer {
         log.println("Randomizer Version: " + Version.VERSION_STRING);
         log.println("Random Seed: " + seed);
         log.println("Settings String: " + Version.VERSION + settings.toString());
+        log.println("Created On: " + LocalDateTime.now());
         log.println();
 
         // All possible changes that can be logged
@@ -1357,11 +1359,14 @@ public class Randomizer {
         }
 
         List<Pokemon> allPokemon = pokemonService.getMainPokemonList();
+        int notFoundCount = 0;
         for(Pokemon p: allPokemon) {
             if(!foundPokemon.contains(p)) {
                 log.println("[" + p.number + "] " + p.fullName());
+                ++notFoundCount;
             }
         }
+        log.println("total unobtainable: " + notFoundCount);
 
         log.println();
     }
