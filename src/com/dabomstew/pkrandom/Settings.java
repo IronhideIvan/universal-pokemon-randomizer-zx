@@ -196,7 +196,7 @@ public class Settings {
     private boolean giveUberTrainersLegendaries;
 
     public enum WildPokemonMod {
-        UNCHANGED, RANDOM, AREA_MAPPING, GLOBAL_MAPPING
+        UNCHANGED, RANDOM, AREA_MAPPING, GLOBAL_MAPPING, VANILLA_THEMED
     }
 
     public enum WildPokemonRestrictionMod {
@@ -590,7 +590,10 @@ public class Settings {
         out.write(eliteFourUniquePokemonNumber | ((minimumCatchRateLevel - 1) << 3));
 
         // 51 trainer misc
-        out.write(makeByteSelected(giveUberTrainersLegendaries, noWildStarters, noWildStaticPokemon));
+        out.write(makeByteSelected(giveUberTrainersLegendaries,
+                noWildStarters,
+                noWildStaticPokemon,
+                wildPokemonMod == WildPokemonMod.VANILLA_THEMED));
 
         try {
             byte[] romName = this.romName.getBytes("US-ASCII");
@@ -696,11 +699,14 @@ public class Settings {
         settings.setTrainersForceFullyEvolved(restoreState(data[14], 7));
         settings.setTrainersForceFullyEvolvedLevel(data[14] & 0x7F);
 
-        settings.setWildPokemonMod(restoreEnum(WildPokemonMod.class, data[15], 6, // UNCHANGED
-                5, // RANDOM
-                1, // AREA_MAPPING
-                4 // GLOBAL_MAPPING
+        settings.setWildPokemonMod(getEnum(WildPokemonMod.class,
+                restoreState(data[15], 6), // UNCHANGED
+                restoreState(data[15], 5), // RANDOM
+                restoreState(data[15], 1), // AREA_MAPPING
+                restoreState(data[15], 4), // GLOBAL_MAPPING
+                restoreState(data[51], 3) // VANILLA
         ));
+
         settings.setWildPokemonRestrictionMod(getEnum(WildPokemonRestrictionMod.class, restoreState(data[15], 2), // NONE
                 restoreState(data[16], 2), // SIMILAR_STRENGTH
                 restoreState(data[15], 0), // CATCH_EM_ALL

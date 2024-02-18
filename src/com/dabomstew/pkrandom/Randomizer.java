@@ -602,6 +602,10 @@ public class Randomizer {
                 encounterRandomizer.game1to1Encounters();
                 wildsChanged = true;
                 break;
+            case VANILLA_THEMED:
+                encounterRandomizer.thematicToVanillaEncounters();
+                wildsChanged = true;
+                break;
             default:
                 if (settings.isWildLevelsModified()) {
                     encounterRandomizer.onlyChangeWildLevels();

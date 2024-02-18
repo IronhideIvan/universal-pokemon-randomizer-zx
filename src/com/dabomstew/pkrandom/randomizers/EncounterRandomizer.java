@@ -36,6 +36,159 @@ public class EncounterRandomizer {
         }
     }
 
+    public void thematicToVanillaEncounters() {
+        // Create a list of out possible options
+        List<Pokemon> optionsList;
+
+        if (settings.isAllowWildAltFormes()) {
+            optionsList = settings.isBlockWildLegendaries() ? new ArrayList<>(pokemonService.getNoLegendaryListInclFormes())
+                    : new ArrayList<>(pokemonService.getMainPokemonListInclFormes());
+            optionsList.removeIf(o -> ((Pokemon) o).actuallyCosmetic);
+        } else {
+            optionsList = settings.isBlockWildLegendaries() ? new ArrayList<>(pokemonService.getNoLegendaryList())
+                    : new ArrayList<>(pokemonService.getMainPokemonList());
+        }
+
+        List<Pokemon> banned = getBannedWildPokemon();
+        optionsList.removeIf(o -> banned.contains((Pokemon) o));
+
+        // First, create a map of all pokemon and their possible replacements.
+        Map<Pokemon, List<Pokemon>> translateMap = new TreeMap<>();
+
+        List<Pokemon> allPokemon = pokemonService.getAllPokemonInclFormesWithoutNull();
+
+        for(Pokemon ogPoke: allPokemon) {
+            // Find all pokemon with a similar level and type as this one.
+            int minPool = 5;
+            int powerLevel = ogPoke.bstForPowerLevels();
+            List<Pokemon> possibleTranslations = findSimilarPokemon(powerLevel, ogPoke.primaryType, minPool, optionsList);
+
+            List<Pokemon> choiceList = new ArrayList<>();
+            // We have more than we want
+            if(possibleTranslations.size() > minPool) {
+                // If we have a pool that's larger than our minimum, we need to pick only our minimum amount.
+                while (choiceList.size() < minPool) {
+                    int choiceIndex = random.nextInt(possibleTranslations.size());
+                    choiceList.add(possibleTranslations.get(choiceIndex));
+                    possibleTranslations.remove(choiceIndex);
+                }
+            }
+            // We have fewer than we want
+            else if (possibleTranslations.size() < minPool) {
+                choiceList.addAll(possibleTranslations);
+
+                // Find any pokemon of a similar power level to add to our pool.
+                if(ogPoke.secondaryType != null) {
+                    possibleTranslations = findSimilarPokemon(powerLevel, ogPoke.secondaryType, minPool, optionsList);
+                }
+                else {
+                    possibleTranslations = findSimilarPokemon(powerLevel, null, minPool, optionsList);
+                    possibleTranslations.removeIf(o -> ((Pokemon) o).primaryType == ogPoke.primaryType);
+                }
+
+                int poolDiff = minPool - choiceList.size();
+                if(possibleTranslations.size() > poolDiff) {
+                    while (choiceList.size() < minPool) {
+                        int choiceIndex = random.nextInt(possibleTranslations.size());
+                        choiceList.add(possibleTranslations.get(choiceIndex));
+                        possibleTranslations.remove(choiceIndex);
+                    }
+                } else {
+                    choiceList.addAll(possibleTranslations);
+                }
+
+                // This would happen if a pokemon has some crazy randomized stats or if the pokemon itself is banned
+                // so lets just add a random pokemon to replace it.
+                if(choiceList.size() == 0) {
+                    choiceList.add(optionsList.get(random.nextInt(optionsList.size())));
+                }
+            }
+            // we have just enough
+            else {
+                choiceList.addAll(possibleTranslations);
+            }
+
+            // It's impossible for our list to be empty, because the OG pokemon should always be included.
+            translateMap.put(ogPoke, choiceList);
+        }
+
+
+        // now that we have our options set up. Lets update our encounters
+        List<EncounterSet> allEncounters = romHandler.getEncounters(settings.isUseTimeBasedEncounters());
+        if(romHandler.isORAS()) {
+            allEncounters = collapseAreasORAS(allEncounters);
+        }
+        for(EncounterSet area: allEncounters) {
+            Map<Pokemon, Pokemon> areaMappedPokemon = new TreeMap<>();
+            Set<Pokemon> usedAreaPokemon = new TreeSet<>();
+            for(Encounter enc: area.encounters) {
+                if(!translateMap.containsKey(enc.pokemon)) {
+                    throw new RandomizationException("Unable to randomize pokemon: " + enc.pokemon.toString());
+                }
+
+                if(areaMappedPokemon.containsKey(enc.pokemon)) {
+                    enc.pokemon = areaMappedPokemon.get(enc.pokemon);
+                }
+                else {
+                    List<Pokemon> options = translateMap.get(enc.pokemon);
+
+                    boolean isPossibleChoice = false;
+                    for (Pokemon p: options) {
+                        if(!usedAreaPokemon.contains(p)) {
+                            isPossibleChoice = true;
+                            break;
+                        }
+                    }
+
+                    Pokemon newPoke;
+                    if(isPossibleChoice) {
+                        do {
+                            newPoke = options.get(random.nextInt(options.size()));
+                        } while (usedAreaPokemon.contains(newPoke));
+                    }
+                    else {
+                        newPoke = options.get(random.nextInt(options.size()));
+                    }
+
+                    usedAreaPokemon.add(newPoke);
+                    areaMappedPokemon.put(enc.pokemon, newPoke);
+                    enc.pokemon = newPoke;
+                    setFormeForEncounter(enc, enc.pokemon);
+                }
+            }
+        }
+
+        int levelModifier = settings.isWildLevelsModified() ? settings.getWildLevelModifier() : 0;
+        if (levelModifier != 0) {
+            ModifyEncounterLevels(allEncounters, levelModifier);
+        }
+
+        romHandler.setEncounters(settings.isUseTimeBasedEncounters(), allEncounters);
+
+    }
+
+    private List<Pokemon> findSimilarPokemon(int powerLevel, Type primaryType, int minPool, List<Pokemon> pickFromList) {
+        List<Pokemon> similarPokemon = new ArrayList<>();
+
+        int minPowerLevel = powerLevel - (powerLevel / 10);
+        int maxPowerLevel = powerLevel + (powerLevel / 10);
+        int maxSearchLoops = 3;
+        for (int i = 0; similarPokemon.size() < minPool && i < maxSearchLoops; ++i) {
+            for(Pokemon possiblePokemon: pickFromList) {
+                if(possiblePokemon.bstForPowerLevels() <= maxPowerLevel
+                        && possiblePokemon.bstForPowerLevels() >= minPowerLevel
+                        && (primaryType == null || possiblePokemon.primaryType == primaryType)) {
+                    similarPokemon.add(possiblePokemon);
+                }
+            }
+
+            minPowerLevel = powerLevel - (powerLevel / 5);
+            maxPowerLevel = powerLevel + (powerLevel / 5);
+        }
+
+        return similarPokemon;
+    }
+
     public void game1to1Encounters() {
         boolean useTimeOfDay = settings.isUseTimeBasedEncounters();
         boolean usePowerLevels = settings.getWildPokemonRestrictionMod() == Settings.WildPokemonRestrictionMod.SIMILAR_STRENGTH;
@@ -145,12 +298,7 @@ public class EncounterRandomizer {
             }
         }
         if (levelModifier != 0) {
-            for (EncounterSet area : currentEncounters) {
-                for (Encounter enc : area.encounters) {
-                    enc.level = Math.min(100, (int) Math.round(enc.level * (1 + levelModifier / 100.0)));
-                    enc.maxLevel = Math.min(100, (int) Math.round(enc.maxLevel * (1 + levelModifier / 100.0)));
-                }
-            }
+            ModifyEncounterLevels(currentEncounters, levelModifier);
         }
 
         romHandler.setEncounters(useTimeOfDay, currentEncounters);
@@ -345,12 +493,7 @@ public class EncounterRandomizer {
             }
         }
         if (levelModifier != 0) {
-            for (EncounterSet area : currentEncounters) {
-                for (Encounter enc : area.encounters) {
-                    enc.level = Math.min(100, (int) Math.round(enc.level * (1 + levelModifier / 100.0)));
-                    enc.maxLevel = Math.min(100, (int) Math.round(enc.maxLevel * (1 + levelModifier / 100.0)));
-                }
-            }
+            ModifyEncounterLevels(currentEncounters, levelModifier);
         }
 
         romHandler.setEncounters(useTimeOfDay, currentEncounters);
@@ -360,14 +503,8 @@ public class EncounterRandomizer {
         int levelModifier = settings.getWildLevelModifier();
 
         List<EncounterSet> currentEncounters = romHandler.getEncounters(true);
-
         if (levelModifier != 0) {
-            for (EncounterSet area : currentEncounters) {
-                for (Encounter enc : area.encounters) {
-                    enc.level = Math.min(100, (int) Math.round(enc.level * (1 + levelModifier / 100.0)));
-                    enc.maxLevel = Math.min(100, (int) Math.round(enc.maxLevel * (1 + levelModifier / 100.0)));
-                }
-            }
+            ModifyEncounterLevels(currentEncounters, levelModifier);
             romHandler.setEncounters(true, currentEncounters);
         }
     }
@@ -820,12 +957,7 @@ public class EncounterRandomizer {
         }
 
         if (levelModifier != 0) {
-            for (EncounterSet area : currentEncounters) {
-                for (Encounter enc : area.encounters) {
-                    enc.level = Math.min(100, (int) Math.round(enc.level * (1 + levelModifier / 100.0)));
-                    enc.maxLevel = Math.min(100, (int) Math.round(enc.maxLevel * (1 + levelModifier / 100.0)));
-                }
-            }
+            ModifyEncounterLevels(currentEncounters, levelModifier);
         }
     }
 
@@ -949,6 +1081,15 @@ public class EncounterRandomizer {
             }
         }
         return primaryCount > secondaryCount ? primaryType : secondaryType;
+    }
+
+    private void ModifyEncounterLevels(List<EncounterSet> encounters, int levelModifierPercentage) {
+        for (EncounterSet area : encounters) {
+            for (Encounter enc : area.encounters) {
+                enc.level = Math.min(100, (int) Math.round(enc.level * (1 + levelModifierPercentage / 100.0)));
+                enc.maxLevel = Math.min(100, (int) Math.round(enc.maxLevel * (1 + levelModifierPercentage / 100.0)));
+            }
+        }
     }
 
     private List<Pokemon> getBannedWildPokemon() {

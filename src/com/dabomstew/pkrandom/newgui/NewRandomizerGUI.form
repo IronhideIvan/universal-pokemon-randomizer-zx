@@ -2492,6 +2492,17 @@
                       <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.wpNoWildStaticPokemonCheckBox.toolTipText"/>
                     </properties>
                   </component>
+                  <component id="2dcf1" class="javax.swing.JRadioButton" binding="wpThematicRadioButton">
+                    <constraints>
+                      <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                      <gridbag weightx="0.0" weighty="0.0"/>
+                    </constraints>
+                    <properties>
+                      <enabled value="false"/>
+                      <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.wpThematicRadioButton.text"/>
+                      <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.wpThematicRadioButton.toolTipText"/>
+                    </properties>
+                  </component>
                 </children>
               </grid>
               <hspacer id="731f9">
@@ -3903,6 +3914,7 @@
       <member id="17061"/>
       <member id="4abec"/>
       <member id="44917"/>
+      <member id="2dcf1"/>
     </group>
     <group name="wildPokemonAdditionalButtonGroup">
       <member id="6fd8b"/>
