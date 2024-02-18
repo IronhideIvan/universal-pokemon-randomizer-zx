@@ -236,7 +236,14 @@ public class TrainerPokemonRandomizer {
 
         List<Integer> mainPlaythroughTrainers = romHandler.getMainPlaythroughTrainers();
 
-        List<Pokemon> cachedLegendaryList = new ArrayList<Pokemon>(pokemonService.getOnlyLegendaryListInclFormes());
+        List<Pokemon> cachedLegendaryList = new ArrayList<>();
+        List<Pokemon> illegalPokes = pokemonService.getBannedFormesForTrainerPokemon();
+        for(Pokemon p: pokemonService.getOnlyLegendaryListInclFormes()) {
+            if(!illegalPokes.contains(p)) {
+                cachedLegendaryList.add(p);
+            }
+        }
+
         Map<Type, List<Pokemon>> cachedLegendariesByType = pokemonService.separatePokemonByType(cachedLegendaryList);
 
         // Randomize Trainer Pokemon
