@@ -2,10 +2,7 @@ package com.dabomstew.pkrandom.randomizers;
 
 import com.dabomstew.pkrandom.Settings;
 import com.dabomstew.pkrandom.exceptions.RandomizationException;
-import com.dabomstew.pkrandom.pokemon.Encounter;
-import com.dabomstew.pkrandom.pokemon.EncounterSet;
-import com.dabomstew.pkrandom.pokemon.Pokemon;
-import com.dabomstew.pkrandom.pokemon.Type;
+import com.dabomstew.pkrandom.pokemon.*;
 import com.dabomstew.pkrandom.romhandlers.RomHandler;
 import com.dabomstew.pkrandom.services.PokemonService;
 
@@ -967,8 +964,15 @@ public class EncounterRandomizer {
         if(settings.isNoWildStarters()) {
             List<Pokemon> starters = romHandler.getStarters();
             for(Pokemon starter: starters) {
-                Set<Pokemon> starterRelatives = pokemonService.getRelatedPokemon(starter);
-                banned.addAll(starterRelatives);
+                Set<Pokemon> relatives = pokemonService.getRelatedPokemon(starter);
+                banned.addAll(relatives);
+            }
+        }
+        if(settings.isNoWildStaticPokemon()) {
+            List<StaticEncounter> staticEncounters = romHandler.getStaticPokemon();
+            for(StaticEncounter se: staticEncounters) {
+                Set<Pokemon> relatives = pokemonService.getRelatedPokemon(se.pkmn);
+                banned.addAll(relatives);
             }
         }
 

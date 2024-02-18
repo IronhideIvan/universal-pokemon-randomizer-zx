@@ -216,6 +216,7 @@ public class Settings {
     private int wildLevelModifier = 0;
     private boolean allowWildAltFormes;
     private boolean noWildStarters;
+    private boolean noWildStaticPokemon;
 
     public enum StaticPokemonMod {
         UNCHANGED, RANDOM_MATCHING, COMPLETELY_RANDOM, SIMILAR_STRENGTH
@@ -589,7 +590,7 @@ public class Settings {
         out.write(eliteFourUniquePokemonNumber | ((minimumCatchRateLevel - 1) << 3));
 
         // 51 trainer misc
-        out.write(makeByteSelected(giveUberTrainersLegendaries, noWildStarters));
+        out.write(makeByteSelected(giveUberTrainersLegendaries, noWildStarters, noWildStaticPokemon));
 
         try {
             byte[] romName = this.romName.getBytes("US-ASCII");
@@ -884,6 +885,7 @@ public class Settings {
 
         settings.setGiveUberTrainersLegendaries(restoreState(data[51], 0));
         settings.setNoWildStarters(restoreState(data[51], 1));
+        settings.setNoWildStaticPokemon(restoreState(data[51], 2));
 
         int romNameLength = data[LENGTH_OF_SETTINGS_DATA] & 0xFF;
         String romName = new String(data, LENGTH_OF_SETTINGS_DATA + 1, romNameLength, "US-ASCII");
@@ -2340,6 +2342,14 @@ public class Settings {
 
     public void setNoWildStarters(boolean noWildStarters) {
         this.noWildStarters = noWildStarters;
+    }
+
+    public boolean isNoWildStaticPokemon() {
+        return noWildStaticPokemon;
+    }
+
+    public void setNoWildStaticPokemon(boolean noWildStaticPokemon) {
+        this.noWildStaticPokemon = noWildStaticPokemon;
     }
 
     private static int makeByteSelected(boolean... bools) {
