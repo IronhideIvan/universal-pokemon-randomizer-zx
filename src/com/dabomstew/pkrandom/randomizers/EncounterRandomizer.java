@@ -971,8 +971,7 @@ public class EncounterRandomizer {
         if(settings.isNoWildStaticPokemon()) {
             List<StaticEncounter> staticEncounters = romHandler.getStaticPokemon();
             for(StaticEncounter se: staticEncounters) {
-                Set<Pokemon> relatives = pokemonService.getRelatedPokemon(se.pkmn);
-                banned.addAll(relatives);
+                banned.add(se.pkmn);
             }
         }
 
