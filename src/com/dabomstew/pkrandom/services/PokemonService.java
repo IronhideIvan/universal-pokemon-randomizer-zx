@@ -281,6 +281,29 @@ public class PokemonService {
         return typeMap;
     }
 
+    public Set<Pokemon> getRelatedPokemon(Pokemon original) {
+        Set<Pokemon> results = new HashSet<>();
+        results.add(original);
+        Queue<Pokemon> toCheck = new LinkedList<>();
+        toCheck.add(original);
+        while (!toCheck.isEmpty()) {
+            Pokemon check = toCheck.poll();
+            for (Evolution ev : check.evolutionsFrom) {
+                if (!results.contains(ev.to)) {
+                    results.add(ev.to);
+                    toCheck.add(ev.to);
+                }
+            }
+            for (Evolution ev : check.evolutionsTo) {
+                if (!results.contains(ev.from)) {
+                    results.add(ev.from);
+                    toCheck.add(ev.from);
+                }
+            }
+        }
+        return results;
+    }
+
     private void addEvolutionaryRelatives(List<Pokemon> pokemonPool) {
         Set<Pokemon> newPokemon = new TreeSet<>();
         for (Pokemon pk : pokemonPool) {

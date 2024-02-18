@@ -302,6 +302,7 @@ public class NewRandomizerGUI {
     private JCheckBox miscDisableLowHPMusicCheckBox;
     private JCheckBox spForceUniqueStarterTypesCheckBox;
     private JCheckBox tpGiveUberTrainersOnlyLegendariesCheckBox;
+    private JCheckBox wpNoStartersInWildCheckBox;
 
     private static JFrame frame;
 
@@ -1609,6 +1610,7 @@ public class NewRandomizerGUI {
         wpPercentageLevelModifierCheckBox.setSelected(settings.isWildLevelsModified());
         wpPercentageLevelModifierSlider.setValue(settings.getWildLevelModifier());
         wpAllowAltFormesCheckBox.setSelected(settings.isAllowWildAltFormes());
+        wpNoStartersInWildCheckBox.setSelected(settings.isNoWildStarters());
 
         stpUnchangedRadioButton.setSelected(settings.getStaticPokemonMod() == Settings.StaticPokemonMod.UNCHANGED);
         stpSwapLegendariesSwapStandardsRadioButton.setSelected(settings.getStaticPokemonMod() == Settings.StaticPokemonMod.RANDOM_MATCHING);
@@ -1834,6 +1836,7 @@ public class NewRandomizerGUI {
         settings.setWildLevelsModified(wpPercentageLevelModifierCheckBox.isSelected());
         settings.setWildLevelModifier(wpPercentageLevelModifierSlider.getValue());
         settings.setAllowWildAltFormes(wpAllowAltFormesCheckBox.isSelected() && wpAllowAltFormesCheckBox.isVisible());
+        settings.setNoWildStarters(wpNoStartersInWildCheckBox.isSelected() && wpNoStartersInWildCheckBox.isVisible());
 
         settings.setStaticPokemonMod(stpUnchangedRadioButton.isSelected(), stpSwapLegendariesSwapStandardsRadioButton.isSelected(),
                 stpRandomCompletelyRadioButton.isSelected(), stpRandomSimilarStrengthRadioButton.isSelected());
@@ -2493,6 +2496,9 @@ public class NewRandomizerGUI {
         wpAllowAltFormesCheckBox.setVisible(true);
         wpAllowAltFormesCheckBox.setEnabled(false);
         wpAllowAltFormesCheckBox.setSelected(false);
+        wpNoStartersInWildCheckBox.setVisible(true);
+        wpNoStartersInWildCheckBox.setEnabled(false);
+        wpNoStartersInWildCheckBox.setSelected(false);
         tmUnchangedRadioButton.setVisible(true);
         tmUnchangedRadioButton.setEnabled(false);
         tmUnchangedRadioButton.setSelected(false);
@@ -3526,10 +3532,13 @@ public class NewRandomizerGUI {
             wpDontUseLegendariesCheckBox.setSelected(false);
             wpAllowAltFormesCheckBox.setEnabled(false);
             wpAllowAltFormesCheckBox.setSelected(false);
+            wpNoStartersInWildCheckBox.setEnabled(false);
+            wpNoStartersInWildCheckBox.setSelected(false);
         } else {
             wpUseTimeBasedEncountersCheckBox.setEnabled(true);
             wpDontUseLegendariesCheckBox.setEnabled(true);
             wpAllowAltFormesCheckBox.setEnabled(true);
+            wpNoStartersInWildCheckBox.setEnabled(true);
         }
 
         if (wpRandomizeHeldItemsCheckBox.isSelected()

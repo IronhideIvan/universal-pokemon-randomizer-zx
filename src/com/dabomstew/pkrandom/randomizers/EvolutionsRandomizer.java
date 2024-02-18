@@ -6,7 +6,6 @@ import com.dabomstew.pkrandom.exceptions.RandomizationException;
 import com.dabomstew.pkrandom.pokemon.Evolution;
 import com.dabomstew.pkrandom.pokemon.EvolutionType;
 import com.dabomstew.pkrandom.pokemon.Pokemon;
-import com.dabomstew.pkrandom.romhandlers.AbstractRomHandler;
 import com.dabomstew.pkrandom.romhandlers.RomHandler;
 import com.dabomstew.pkrandom.services.PokemonService;
 
@@ -157,7 +156,7 @@ public class EvolutionsRandomizer {
                         pk.evolutionsTo.add(tempEvo);
                         boolean exceededLimit = false;
 
-                        Set<Pokemon> related = relatedPokemon(fromPK);
+                        Set<Pokemon> related = pokemonService.getRelatedPokemon(fromPK);
 
                         for (Pokemon pk2 : related) {
                             int numPreEvos = pokemonService.numPreEvolutions(pk2, stageLimit);
@@ -472,29 +471,6 @@ public class EvolutionsRandomizer {
         }
         recStack.remove(pk);
         return false;
-    }
-
-    private Set<Pokemon> relatedPokemon(Pokemon original) {
-        Set<Pokemon> results = new HashSet<>();
-        results.add(original);
-        Queue<Pokemon> toCheck = new LinkedList<>();
-        toCheck.add(original);
-        while (!toCheck.isEmpty()) {
-            Pokemon check = toCheck.poll();
-            for (Evolution ev : check.evolutionsFrom) {
-                if (!results.contains(ev.to)) {
-                    results.add(ev.to);
-                    toCheck.add(ev.to);
-                }
-            }
-            for (Evolution ev : check.evolutionsTo) {
-                if (!results.contains(ev.from)) {
-                    results.add(ev.from);
-                    toCheck.add(ev.from);
-                }
-            }
-        }
-        return results;
     }
 
     private Pokemon pickEvoPowerLvlReplacement(List<Pokemon> pokemonPool, Pokemon current) {

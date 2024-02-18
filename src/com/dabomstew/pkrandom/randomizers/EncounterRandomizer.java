@@ -45,8 +45,6 @@ public class EncounterRandomizer {
         boolean noLegendaries = settings.isBlockWildLegendaries();
         int levelModifier = settings.isWildLevelsModified() ? settings.getWildLevelModifier() : 0;
         boolean allowAltFormes = settings.isAllowWildAltFormes();
-        boolean banIrregularAltFormes = settings.isBanIrregularAltFormes();
-        boolean abilitiesAreRandomized = settings.getAbilitiesMod() == Settings.AbilitiesMod.RANDOMIZE;
 
         pokemonService.checkPokemonRestrictions();
         // Build the full 1-to-1 map
@@ -62,15 +60,8 @@ public class EncounterRandomizer {
             remainingRight = noLegendaries ? new ArrayList<>(pokemonService.getNoLegendaryList())
                     : new ArrayList<>(pokemonService.getMainPokemonList());
         }
-        List<Pokemon> banned = romHandler.bannedForWildEncounters();
-        banned.addAll(pokemonService.getBannedFormesForPlayerPokemon());
-        if (!abilitiesAreRandomized) {
-            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
-            banned.addAll(abilityDependentFormes);
-        }
-        if (banIrregularAltFormes) {
-            banned.addAll(romHandler.getIrregularFormes());
-        }
+        List<Pokemon> banned = getBannedWildPokemon();
+
         // Banned pokemon should be mapped to themselves
         for (Pokemon bannedPK : banned) {
             translateMap.put(bannedPK, bannedPK);
@@ -177,8 +168,6 @@ public class EncounterRandomizer {
         boolean balanceShakingGrass = settings.isBalanceShakingGrass();
         int levelModifier = settings.isWildLevelsModified() ? settings.getWildLevelModifier() : 0;
         boolean allowAltFormes = settings.isAllowWildAltFormes();
-        boolean banIrregularAltFormes = settings.isBanIrregularAltFormes();
-        boolean abilitiesAreRandomized = settings.getAbilitiesMod() == Settings.AbilitiesMod.RANDOMIZE;
 
         List<EncounterSet> currentEncounters = romHandler.getEncounters(useTimeOfDay);
 
@@ -198,15 +187,7 @@ public class EncounterRandomizer {
         List<EncounterSet> scrambledEncounters = new ArrayList<>(currentEncounters);
         Collections.shuffle(scrambledEncounters, this.random);
 
-        List<Pokemon> banned = romHandler.bannedForWildEncounters();
-        banned.addAll(pokemonService.getBannedFormesForPlayerPokemon());
-        if (!abilitiesAreRandomized) {
-            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
-            banned.addAll(abilityDependentFormes);
-        }
-        if (banIrregularAltFormes) {
-            banned.addAll(romHandler.getIrregularFormes());
-        }
+        List<Pokemon> banned =  getBannedWildPokemon();
         // Assume EITHER catch em all OR type themed OR match strength for now
         if (catchEmAll) {
             List<Pokemon> allPokes;
@@ -474,17 +455,9 @@ public class EncounterRandomizer {
         boolean usePowerLevels = settings.getWildPokemonRestrictionMod() == Settings.WildPokemonRestrictionMod.SIMILAR_STRENGTH;
         boolean noLegendaries = settings.isBlockWildLegendaries();
         boolean allowAltFormes = settings.isAllowWildAltFormes();
-        boolean banIrregularAltFormes = settings.isBanIrregularAltFormes();
-        boolean abilitiesAreRandomized = settings.getAbilitiesMod() == Settings.AbilitiesMod.RANDOMIZE;
 
-        List<Pokemon> banned = romHandler.bannedForWildEncounters();
-        if (!abilitiesAreRandomized) {
-            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
-            banned.addAll(abilityDependentFormes);
-        }
-        if (banIrregularAltFormes) {
-            banned.addAll(romHandler.getIrregularFormes());
-        }
+        List<Pokemon> banned = getBannedWildPokemon();
+
         Map<Integer, List<EncounterSet>> zonesToEncounters = mapZonesToEncounters(collapsedEncounters);
         Map<Type, List<Pokemon>> cachedPokeLists = new TreeMap<>();
         for (List<EncounterSet> encountersInZone : zonesToEncounters.values()) {
@@ -658,19 +631,9 @@ public class EncounterRandomizer {
         boolean noLegendaries = settings.isBlockWildLegendaries();
         int levelModifier = settings.isWildLevelsModified() ? settings.getWildLevelModifier() : 0;
         boolean allowAltFormes = settings.isAllowWildAltFormes();
-        boolean banIrregularAltFormes = settings.isBanIrregularAltFormes();
-        boolean abilitiesAreRandomized = settings.getAbilitiesMod() == Settings.AbilitiesMod.RANDOMIZE;
 
         pokemonService.checkPokemonRestrictions();
-        List<Pokemon> banned = romHandler.bannedForWildEncounters();
-        banned.addAll(pokemonService.getBannedFormesForPlayerPokemon());
-        if (!abilitiesAreRandomized) {
-            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
-            banned.addAll(abilityDependentFormes);
-        }
-        if (banIrregularAltFormes) {
-            banned.addAll(romHandler.getIrregularFormes());
-        }
+        List<Pokemon> banned = getBannedWildPokemon();
 
         // New: randomize the order encounter sets are randomized in.
         // Leads to less predictable results for various modifiers.
@@ -989,5 +952,26 @@ public class EncounterRandomizer {
             }
         }
         return primaryCount > secondaryCount ? primaryType : secondaryType;
+    }
+
+    private List<Pokemon> getBannedWildPokemon() {
+        List<Pokemon> banned =  romHandler.bannedForWildEncounters();
+        banned.addAll(pokemonService.getBannedFormesForPlayerPokemon());
+        if (settings.getAbilitiesMod() != Settings.AbilitiesMod.RANDOMIZE) {
+            List<Pokemon> abilityDependentFormes = pokemonService.getAbilityDependentFormes();
+            banned.addAll(abilityDependentFormes);
+        }
+        if (settings.isBanIrregularAltFormes()) {
+            banned.addAll(romHandler.getIrregularFormes());
+        }
+        if(settings.isNoWildStarters()) {
+            List<Pokemon> starters = romHandler.getStarters();
+            for(Pokemon starter: starters) {
+                Set<Pokemon> starterRelatives = pokemonService.getRelatedPokemon(starter);
+                banned.addAll(starterRelatives);
+            }
+        }
+
+        return banned;
     }
 }
