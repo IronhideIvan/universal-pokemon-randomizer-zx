@@ -193,6 +193,8 @@ public class Settings {
     private boolean shinyChance;
     private boolean betterTrainerMovesets;
 
+    private boolean giveUberTrainersLegendaries;
+
     public enum WildPokemonMod {
         UNCHANGED, RANDOM, AREA_MAPPING, GLOBAL_MAPPING
     }
@@ -585,6 +587,9 @@ public class Settings {
         // 50 elite four unique pokemon (3 bits) + catch rate level (3 bits)
         out.write(eliteFourUniquePokemonNumber | ((minimumCatchRateLevel - 1) << 3));
 
+        // 51 trainer misc
+        out.write(makeByteSelected(giveUberTrainersLegendaries));
+
         try {
             byte[] romName = this.romName.getBytes("US-ASCII");
             out.write(romName.length);
@@ -875,6 +880,8 @@ public class Settings {
 
         settings.setEliteFourUniquePokemonNumber(data[50] & 0x7);
         settings.setMinimumCatchRateLevel(((data[50] & 0x38) >> 3) + 1);
+
+        settings.setGiveUberTrainersLegendaries(restoreState(data[51], 0));
 
         int romNameLength = data[LENGTH_OF_SETTINGS_DATA] & 0xFF;
         String romName = new String(data, LENGTH_OF_SETTINGS_DATA + 1, romNameLength, "US-ASCII");
@@ -1549,6 +1556,14 @@ public class Settings {
 
     private void setTrainersMod(TrainersMod trainersMod) {
         this.trainersMod = trainersMod;
+    }
+
+    public boolean isGiveUberTrainersLegendaries() {
+        return giveUberTrainersLegendaries;
+    }
+
+    public void setGiveUberTrainersLegendaries(boolean giveUberTrainersLegendaries) {
+        this.giveUberTrainersLegendaries = giveUberTrainersLegendaries;
     }
 
     public boolean isRivalCarriesStarterThroughout() {

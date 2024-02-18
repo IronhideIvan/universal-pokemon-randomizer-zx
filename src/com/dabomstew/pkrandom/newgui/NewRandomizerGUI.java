@@ -301,6 +301,7 @@ public class NewRandomizerGUI {
     private JCheckBox miscUpdateRotomFormeTypingCheckBox;
     private JCheckBox miscDisableLowHPMusicCheckBox;
     private JCheckBox spForceUniqueStarterTypesCheckBox;
+    private JCheckBox tpGiveUberTrainersOnlyLegendariesCheckBox;
 
     private static JFrame frame;
 
@@ -1570,6 +1571,7 @@ public class NewRandomizerGUI {
 
         tpRandomShinyTrainerPokemonCheckBox.setSelected(settings.isShinyChance());
         tpBetterMovesetsCheckBox.setSelected(settings.isBetterTrainerMovesets());
+        tpGiveUberTrainersOnlyLegendariesCheckBox.setSelected(settings.isGiveUberTrainersLegendaries());
 
         totpUnchangedRadioButton.setSelected(settings.getTotemPokemonMod() == Settings.TotemPokemonMod.UNCHANGED);
         totpRandomRadioButton.setSelected(settings.getTotemPokemonMod() == Settings.TotemPokemonMod.RANDOM);
@@ -1808,6 +1810,7 @@ public class NewRandomizerGUI {
         settings.setConsumableItemsOnlyForTrainers(tpConsumableItemsOnlyCheckBox.isVisible() && tpConsumableItemsOnlyCheckBox.isSelected());
         settings.setSensibleItemsOnlyForTrainers(tpSensibleItemsCheckBox.isVisible() && tpSensibleItemsCheckBox.isSelected());
         settings.setHighestLevelGetsItemsForTrainers(tpHighestLevelGetsItemCheckBox.isVisible() && tpHighestLevelGetsItemCheckBox.isSelected());
+        settings.setGiveUberTrainersLegendaries(tpGiveUberTrainersOnlyLegendariesCheckBox.isVisible() && tpGiveUberTrainersOnlyLegendariesCheckBox.isSelected());
 
         settings.setTotemPokemonMod(totpUnchangedRadioButton.isSelected(), totpRandomRadioButton.isSelected(), totpRandomSimilarStrengthRadioButton.isSelected());
         settings.setAllyPokemonMod(totpAllyUnchangedRadioButton.isSelected(), totpAllyRandomRadioButton.isSelected(), totpAllyRandomSimilarStrengthRadioButton.isSelected());
@@ -2388,6 +2391,9 @@ public class NewRandomizerGUI {
         tpHighestLevelGetsItemCheckBox.setSelected(false);
         tpRandomShinyTrainerPokemonCheckBox.setVisible(true);
         tpRandomShinyTrainerPokemonCheckBox.setEnabled(false);
+        tpGiveUberTrainersOnlyLegendariesCheckBox.setVisible(true);
+        tpGiveUberTrainersOnlyLegendariesCheckBox.setEnabled(false);
+        tpGiveUberTrainersOnlyLegendariesCheckBox.setSelected(false);
         tpBetterMovesetsCheckBox.setVisible(true);
         tpBetterMovesetsCheckBox.setEnabled(false);
         tpBetterMovesetsCheckBox.setSelected(false);
@@ -2884,6 +2890,12 @@ public class NewRandomizerGUI {
             tpBetterMovesetsCheckBox.setVisible(pokemonGeneration >= 3);
             tpBetterMovesetsCheckBox.setEnabled(pokemonGeneration >= 3);
 
+            tpGiveUberTrainersOnlyLegendariesCheckBox.setVisible(pokemonGeneration == 2 || pokemonGeneration == 4);
+            if(tpGiveUberTrainersOnlyLegendariesCheckBox.isVisible()) {
+                tpGiveUberTrainersOnlyLegendariesCheckBox.setEnabled(true);
+                tpGiveUberTrainersOnlyLegendariesCheckBox.setSelected(false);
+            }
+
             totpPanel.setVisible(pokemonGeneration == 7);
             if (totpPanel.isVisible()) {
                 totpUnchangedRadioButton.setEnabled(true);
@@ -3370,6 +3382,8 @@ public class NewRandomizerGUI {
             tpHighestLevelGetsItemCheckBox.setSelected(false);
             tpEliteFourUniquePokemonCheckBox.setEnabled(false);
             tpEliteFourUniquePokemonCheckBox.setSelected(false);
+            tpGiveUberTrainersOnlyLegendariesCheckBox.setEnabled(false);
+            tpGiveUberTrainersOnlyLegendariesCheckBox.setSelected(false);
         } else {
             tpSimilarStrengthCheckBox.setEnabled(true);
             tpDontUseLegendariesCheckBox.setEnabled(true);
@@ -3391,6 +3405,7 @@ public class NewRandomizerGUI {
             tpImportantTrainersItemsCheckBox.setEnabled(tpImportantTrainersItemsCheckBox.isVisible());
             tpRegularTrainersItemsCheckBox.setEnabled(tpRegularTrainersItemsCheckBox.isVisible());
             tpEliteFourUniquePokemonCheckBox.setEnabled(tpEliteFourUniquePokemonCheckBox.isVisible());
+            tpGiveUberTrainersOnlyLegendariesCheckBox.setEnabled(tpGiveUberTrainersOnlyLegendariesCheckBox.isVisible());
         }
 
         if (tpForceFullyEvolvedAtCheckBox.isSelected()) {

@@ -1946,6 +1946,17 @@
                       <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.tpBetterMovesetsCheckBox.toolTipText"/>
                     </properties>
                   </component>
+                  <component id="43481" class="javax.swing.JCheckBox" binding="tpGiveUberTrainersOnlyLegendariesCheckBox">
+                    <constraints>
+                      <grid row="9" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
+                      <gridbag weightx="0.0" weighty="0.0"/>
+                    </constraints>
+                    <properties>
+                      <enabled value="false"/>
+                      <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.tpGiveUberTrainersOnlyLegendariesCheckBox.text"/>
+                      <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.tpGiveUberTrainersOnlyLegendariesCheckBox.toolTipText"/>
+                    </properties>
+                  </component>
                 </children>
               </grid>
               <hspacer id="66d2">

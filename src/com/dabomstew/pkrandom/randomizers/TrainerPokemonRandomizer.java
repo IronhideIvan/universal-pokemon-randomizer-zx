@@ -130,7 +130,7 @@ public class TrainerPokemonRandomizer {
 
         // Type Themed related
         Map<Trainer, Type> trainerTypes = new TreeMap<>();
-        Set<Type> usedUberTypes = new TreeSet<>();
+        Set<Type> usedChampionTypes = new TreeSet<>();
         if (isTypeThemed || isTypeThemedEliteFourGymOnly || isTypeThemedAllGroups) {
             typeWeightings = new TreeMap<>();
             totalTypeWeighting = 0;
@@ -189,7 +189,7 @@ public class TrainerPokemonRandomizer {
                     usedEliteTypes.add(typeForGroup);
                 }
                 if (group.equals("CHAMPION")) {
-                    usedUberTypes.add(typeForGroup);
+                    usedChampionTypes.add(typeForGroup);
                 }
 
                 for (Trainer t : trainersInGroup) {
@@ -236,6 +236,9 @@ public class TrainerPokemonRandomizer {
 
         List<Integer> mainPlaythroughTrainers = romHandler.getMainPlaythroughTrainers();
 
+        List<Pokemon> cachedLegendaryList = new ArrayList<Pokemon>(pokemonService.getOnlyLegendaryListInclFormes());
+        Map<Type, List<Pokemon>> cachedLegendariesByType = pokemonService.separatePokemonByType(cachedLegendaryList);
+
         // Randomize Trainer Pokemon
         // The result after this is done will not be final if "Force Fully Evolved" or "Rival Carries Starter"
         // are used, as they are applied later
@@ -249,16 +252,60 @@ public class TrainerPokemonRandomizer {
                 continue;
             }
 
+            // If we have a setting to give uber trainers a legendary set, lets do that.
+            if(settings.isGiveUberTrainersLegendaries() && t.tag != null && t.tag.equals("UBER")) {
+                Set<Type> usedUberTypes = new TreeSet<Type>();
+                List<Pokemon> usedPokemon = new ArrayList<>();
+
+                for (TrainerPokemon tp : t.pokemon) {
+                    // Give the uber a legendary of each type for guaranteed variety. If all available types are used,
+                    // then give them a normal pokemon instead.
+                    if(usedUberTypes.size() < cachedLegendariesByType.size()) {
+                        Type uberType = romHandler.randomType();
+                        while(!cachedLegendariesByType.containsKey(uberType) || usedUberTypes.contains(uberType)) {
+                            uberType = romHandler.randomType();
+                        }
+                        usedUberTypes.add(uberType);
+
+                        List<Pokemon> legendaryList = cachedLegendariesByType.get(uberType);
+
+                        // failsafe in case we run out of options
+                        int safetyCount = 0;
+                        Pokemon newPoke = legendaryList.get(this.random.nextInt(legendaryList.size()));
+                        while(usedPokemon.contains(newPoke) && safetyCount < 5) {
+                            newPoke = legendaryList.get(this.random.nextInt(legendaryList.size()));
+                            ++safetyCount;
+                        }
+                        usedPokemon.add(newPoke);
+
+                        tp.pokemon = newPoke;
+                        tp.resetMoves = true;
+                        tp.abilitySlot = romHandler.getRandomAbilitySlot(tp.pokemon);
+                        setFormeForTrainerPokemon(tp, tp.pokemon);
+                    }
+                    else {
+                        tp.pokemon = pickTrainerPokeReplacement(
+                                tp,
+                                tp.pokemon,
+                                null,
+                                cachedAllList,
+                                usePlacementHistory
+                        );
+                    }
+                }
+                continue;
+            }
+
             // If type themed, give a type to each unassigned trainer
             Type typeForTrainer = trainerTypes.get(t);
             if (typeForTrainer == null && isTypeThemed) {
                 typeForTrainer = pickType(weightByFrequency, noLegendaries, includeFormes);
                 // Ubers: can't have the same type as each other
-                if (t.tag != null && t.tag.equals("UBER")) {
-                    while (usedUberTypes.contains(typeForTrainer)) {
+                if (t.tag != null && t.tag.equals("CHAMPION")) {
+                    while (usedChampionTypes.contains(typeForTrainer)) {
                         typeForTrainer = pickType(weightByFrequency, noLegendaries, includeFormes);
                     }
-                    usedUberTypes.add(typeForTrainer);
+                    usedChampionTypes.add(typeForTrainer);
                 }
             }
 

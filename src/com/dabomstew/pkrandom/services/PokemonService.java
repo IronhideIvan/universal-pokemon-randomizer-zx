@@ -253,6 +253,34 @@ public class PokemonService {
         return typedPokes;
     }
 
+    public Map<Type, List<Pokemon>> separatePokemonByType(List<Pokemon> allPokemon) {
+        Map<Type, List<Pokemon>> typeMap = new TreeMap<Type, List<Pokemon>>();
+
+        for (Pokemon pk : allPokemon) {
+            if (pk == null) {
+                continue;
+            }
+
+            if(pk.primaryType != null) {
+                if(!typeMap.containsKey(pk.primaryType)){
+                    typeMap.put(pk.primaryType, new ArrayList<>());
+                }
+
+                typeMap.get(pk.primaryType).add(pk);
+            }
+
+            if(pk.secondaryType != null && pk.secondaryType != pk.primaryType) {
+                if(!typeMap.containsKey(pk.secondaryType)){
+                    typeMap.put(pk.secondaryType, new ArrayList<>());
+                }
+
+                typeMap.get(pk.secondaryType).add(pk);
+            }
+        }
+
+        return typeMap;
+    }
+
     private void addEvolutionaryRelatives(List<Pokemon> pokemonPool) {
         Set<Pokemon> newPokemon = new TreeSet<>();
         for (Pokemon pk : pokemonPool) {
