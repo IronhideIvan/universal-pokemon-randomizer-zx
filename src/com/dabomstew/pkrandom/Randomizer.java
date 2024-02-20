@@ -617,6 +617,10 @@ public class Randomizer {
         }
 
         if (wildsChanged) {
+            if (settings.getWildPokemonMod() == Settings.WildPokemonMod.VANILLA_THEMED) {
+                // encounterRandomizer.logVanillaEncountersMap(log);
+            }
+
             logWildPokemonChanges(log);
         } else {
             log.println("Wild Pokemon: Unchanged." + NEWLINE);
