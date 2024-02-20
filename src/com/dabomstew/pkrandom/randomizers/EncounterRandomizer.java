@@ -59,38 +59,38 @@ public class EncounterRandomizer {
         List<Pokemon> allPokemon = pokemonService.getAllPokemonInclFormesWithoutNull();
 
         // The min pool may be configurable, but for now lets leave it in the code.
-        int minPool = 5;
+        int poolSize = 5;
         for(Pokemon ogPoke: allPokemon) {
             // Find all pokemon with a similar level and type as this one.
             int ogPowerLevel = ogPoke.bstForPowerLevels();
-            List<Pokemon> possibleTranslations = findSimilarPokemon(ogPowerLevel, ogPoke.primaryType, minPool, sortedOptionsList);
+            List<Pokemon> possibleTranslations = findSimilarPokemon(ogPowerLevel, ogPoke.primaryType, poolSize, sortedOptionsList);
 
             List<Pokemon> choiceList = new ArrayList<>();
             // We have more than we want
-            if(possibleTranslations.size() > minPool) {
+            if(possibleTranslations.size() > poolSize) {
                 // If we have a pool that's larger than our minimum, we need to pick only our minimum amount.
-                while (choiceList.size() < minPool) {
+                while (choiceList.size() < poolSize) {
                     int choiceIndex = random.nextInt(possibleTranslations.size());
                     choiceList.add(possibleTranslations.get(choiceIndex));
                     possibleTranslations.remove(choiceIndex);
                 }
             }
             // We have fewer than we want
-            else if (possibleTranslations.size() < minPool) {
+            else if (possibleTranslations.size() < poolSize) {
                 choiceList.addAll(possibleTranslations);
 
                 // Find any pokemon of a similar power level to add to our pool.
                 if(ogPoke.secondaryType != null) {
-                    possibleTranslations = findSimilarPokemon(ogPowerLevel, ogPoke.secondaryType, minPool, sortedOptionsList);
+                    possibleTranslations = findSimilarPokemon(ogPowerLevel, ogPoke.secondaryType, poolSize, sortedOptionsList);
                 }
                 else {
-                    possibleTranslations = findSimilarPokemon(ogPowerLevel, null, minPool, sortedOptionsList);
+                    possibleTranslations = findSimilarPokemon(ogPowerLevel, null, poolSize, sortedOptionsList);
                     possibleTranslations.removeIf(o -> ((Pokemon) o).primaryType == ogPoke.primaryType);
                 }
 
-                int poolDiff = minPool - choiceList.size();
+                int poolDiff = poolSize - choiceList.size();
                 if(possibleTranslations.size() > poolDiff) {
-                    while (choiceList.size() < minPool) {
+                    while (choiceList.size() < poolSize) {
                         int choiceIndex = random.nextInt(possibleTranslations.size());
                         choiceList.add(possibleTranslations.get(choiceIndex));
                         possibleTranslations.remove(choiceIndex);
@@ -117,27 +117,27 @@ public class EncounterRandomizer {
                     // We are the weakest thing in the list, so
                     // grab the first few pokemon.
                     if(whereWouldIBeIndex == 0) {
-                        for(int i = 0; i < minPool; ++i) {
+                        for(int i = 0; i < poolSize; ++i) {
                             choiceList.add(sortedOptionsList.get(i));
                         }
                     }
                     // We are too strong, grab the strongest few pokemon
                     else if (whereWouldIBeIndex == sortedOptionsList.size()) {
-                        for(int i = 0; i < minPool; ++i) {
+                        for(int i = 0; i < poolSize; ++i) {
                             choiceList.add(sortedOptionsList.get(sortedOptionsList.size() - i - 1));
                         }
                     }
                     // Grab a few stronger and weaker pokemon
                     else {
-                        int halfMinCount = minPool / 2;
-                        if(halfMinCount * 2 < minPool) {
+                        int halfMinCount = poolSize / 2;
+                        if(halfMinCount * 2 < poolSize) {
                             ++halfMinCount;
                         }
 
                         int numStrongerToFetch = Math.min(sortedOptionsList.size() - whereWouldIBeIndex, halfMinCount);
                         int numWeakerToFetch = Math.min(whereWouldIBeIndex, halfMinCount);
                         int sanityCount = 0;
-                        while(sanityCount < 3 && numStrongerToFetch + numWeakerToFetch < minPool) {
+                        while(sanityCount < 3 && numStrongerToFetch + numWeakerToFetch < poolSize) {
                             numStrongerToFetch = Math.min(sortedOptionsList.size() - whereWouldIBeIndex, numStrongerToFetch + 1);
                             numWeakerToFetch = Math.min(whereWouldIBeIndex, numWeakerToFetch + 1);
                             ++sanityCount;
