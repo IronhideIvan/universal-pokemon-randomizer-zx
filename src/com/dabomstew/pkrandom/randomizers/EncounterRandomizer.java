@@ -38,30 +38,32 @@ public class EncounterRandomizer {
 
     public void thematicToVanillaEncounters() {
         // Create a list of out possible options
-        List<Pokemon> optionsList;
+        List<Pokemon> sortedOptionsList;
 
         if (settings.isAllowWildAltFormes()) {
-            optionsList = settings.isBlockWildLegendaries() ? new ArrayList<>(pokemonService.getNoLegendaryListInclFormes())
+            sortedOptionsList = settings.isBlockWildLegendaries() ? new ArrayList<>(pokemonService.getNoLegendaryListInclFormes())
                     : new ArrayList<>(pokemonService.getMainPokemonListInclFormes());
-            optionsList.removeIf(o -> ((Pokemon) o).actuallyCosmetic);
+            sortedOptionsList.removeIf(o -> ((Pokemon) o).actuallyCosmetic);
         } else {
-            optionsList = settings.isBlockWildLegendaries() ? new ArrayList<>(pokemonService.getNoLegendaryList())
+            sortedOptionsList = settings.isBlockWildLegendaries() ? new ArrayList<>(pokemonService.getNoLegendaryList())
                     : new ArrayList<>(pokemonService.getMainPokemonList());
         }
 
         List<Pokemon> banned = getBannedWildPokemon();
-        optionsList.removeIf(o -> banned.contains((Pokemon) o));
+        sortedOptionsList.removeIf(o -> banned.contains((Pokemon) o));
+        sortedOptionsList.sort(Comparator.comparingInt(Pokemon::bstForPowerLevels));
 
         // First, create a map of all pokemon and their possible replacements.
         Map<Pokemon, List<Pokemon>> translateMap = new TreeMap<>();
 
         List<Pokemon> allPokemon = pokemonService.getAllPokemonInclFormesWithoutNull();
 
+        // The min pool may be configurable, but for now lets leave it in the code.
+        int minPool = 5;
         for(Pokemon ogPoke: allPokemon) {
             // Find all pokemon with a similar level and type as this one.
-            int minPool = 5;
-            int powerLevel = ogPoke.bstForPowerLevels();
-            List<Pokemon> possibleTranslations = findSimilarPokemon(powerLevel, ogPoke.primaryType, minPool, optionsList);
+            int ogPowerLevel = ogPoke.bstForPowerLevels();
+            List<Pokemon> possibleTranslations = findSimilarPokemon(ogPowerLevel, ogPoke.primaryType, minPool, sortedOptionsList);
 
             List<Pokemon> choiceList = new ArrayList<>();
             // We have more than we want
@@ -79,10 +81,10 @@ public class EncounterRandomizer {
 
                 // Find any pokemon of a similar power level to add to our pool.
                 if(ogPoke.secondaryType != null) {
-                    possibleTranslations = findSimilarPokemon(powerLevel, ogPoke.secondaryType, minPool, optionsList);
+                    possibleTranslations = findSimilarPokemon(ogPowerLevel, ogPoke.secondaryType, minPool, sortedOptionsList);
                 }
                 else {
-                    possibleTranslations = findSimilarPokemon(powerLevel, null, minPool, optionsList);
+                    possibleTranslations = findSimilarPokemon(ogPowerLevel, null, minPool, sortedOptionsList);
                     possibleTranslations.removeIf(o -> ((Pokemon) o).primaryType == ogPoke.primaryType);
                 }
 
@@ -96,11 +98,59 @@ public class EncounterRandomizer {
                 } else {
                     choiceList.addAll(possibleTranslations);
                 }
-
                 // This would happen if a pokemon has some crazy randomized stats or if the pokemon itself is banned
-                // so lets just add a random pokemon to replace it.
-                if(choiceList.size() == 0) {
-                    choiceList.add(optionsList.get(random.nextInt(optionsList.size())));
+                // so we need to find the nearest neighbors of this pokemon's power and add those.
+                if(choiceList.isEmpty()) {
+
+                    int whereWouldIBeIndex = 0;
+                    while(whereWouldIBeIndex < sortedOptionsList.size()) {
+                        Pokemon testPoke = sortedOptionsList.get(whereWouldIBeIndex);
+
+                        if(ogPowerLevel < testPoke.bstForPowerLevels()) {
+                            // We found our closest-in-power pokemon.
+                            break;
+                        }
+
+                        ++whereWouldIBeIndex;
+                    }
+
+                    // We are the weakest thing in the list, so
+                    // grab the first few pokemon.
+                    if(whereWouldIBeIndex == 0) {
+                        for(int i = 0; i < minPool; ++i) {
+                            choiceList.add(sortedOptionsList.get(i));
+                        }
+                    }
+                    // We are too strong, grab the strongest few pokemon
+                    else if (whereWouldIBeIndex == sortedOptionsList.size()) {
+                        for(int i = 0; i < minPool; ++i) {
+                            choiceList.add(sortedOptionsList.get(sortedOptionsList.size() - i - 1));
+                        }
+                    }
+                    // Grab a few stronger and weaker pokemon
+                    else {
+                        int halfMinCount = minPool / 2;
+                        if(halfMinCount * 2 < minPool) {
+                            ++halfMinCount;
+                        }
+
+                        int numStrongerToFetch = Math.min(sortedOptionsList.size() - whereWouldIBeIndex, halfMinCount);
+                        int numWeakerToFetch = Math.min(whereWouldIBeIndex, halfMinCount);
+                        int sanityCount = 0;
+                        while(sanityCount < 3 && numStrongerToFetch + numWeakerToFetch < minPool) {
+                            numStrongerToFetch = Math.min(sortedOptionsList.size() - whereWouldIBeIndex, numStrongerToFetch + 1);
+                            numWeakerToFetch = Math.min(whereWouldIBeIndex, numWeakerToFetch + 1);
+                            ++sanityCount;
+                        }
+
+                        for(int i = 0; i < numWeakerToFetch; ++i) {
+                            choiceList.add(sortedOptionsList.get(whereWouldIBeIndex - i));
+                        }
+
+                        for(int i = 0; i < numStrongerToFetch; ++i) {
+                            choiceList.add(sortedOptionsList.get(whereWouldIBeIndex + i + 1));
+                        }
+                    }
                 }
             }
             // we have just enough
@@ -108,7 +158,8 @@ public class EncounterRandomizer {
                 choiceList.addAll(possibleTranslations);
             }
 
-            // It's impossible for our list to be empty, because the OG pokemon should always be included.
+            // Shuffle the collection for good measure.
+            Collections.shuffle(choiceList, random);
             translateMap.put(ogPoke, choiceList);
         }
 
@@ -140,14 +191,11 @@ public class EncounterRandomizer {
                         }
                     }
 
-                    Pokemon newPoke;
+                    Pokemon newPoke = options.get(random.nextInt(options.size()));
                     if(isPossibleChoice) {
-                        do {
+                        while (usedAreaPokemon.contains(newPoke)) {
                             newPoke = options.get(random.nextInt(options.size()));
-                        } while (usedAreaPokemon.contains(newPoke));
-                    }
-                    else {
-                        newPoke = options.get(random.nextInt(options.size()));
+                        }
                     }
 
                     usedAreaPokemon.add(newPoke);
@@ -167,7 +215,7 @@ public class EncounterRandomizer {
 
     }
 
-    private List<Pokemon> findSimilarPokemon(int powerLevel, Type primaryType, int minPool, List<Pokemon> pickFromList) {
+    private List<Pokemon> findSimilarPokemon(int powerLevel, Type pokemonType, int minPool, List<Pokemon> pickFromList) {
         List<Pokemon> similarPokemon = new ArrayList<>();
 
         int minPowerLevel = powerLevel - (powerLevel / 10);
@@ -177,13 +225,14 @@ public class EncounterRandomizer {
             for(Pokemon possiblePokemon: pickFromList) {
                 if(possiblePokemon.bstForPowerLevels() <= maxPowerLevel
                         && possiblePokemon.bstForPowerLevels() >= minPowerLevel
-                        && (primaryType == null || possiblePokemon.primaryType == primaryType)) {
+                        && (pokemonType == null || possiblePokemon.primaryType == pokemonType
+                            || (possiblePokemon.secondaryType != null && possiblePokemon.secondaryType == pokemonType))) {
                     similarPokemon.add(possiblePokemon);
                 }
             }
 
-            minPowerLevel = powerLevel - (powerLevel / 5);
-            maxPowerLevel = powerLevel + (powerLevel / 5);
+            minPowerLevel -= powerLevel / 20;
+            maxPowerLevel += powerLevel / 20;
         }
 
         return similarPokemon;
