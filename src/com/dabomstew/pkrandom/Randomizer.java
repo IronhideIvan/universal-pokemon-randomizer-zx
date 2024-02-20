@@ -1196,6 +1196,7 @@ public class Randomizer {
                 log.println();
                 for (TrainerPokemon tpk : t.pokemon) {
                     List<Move> moves = romHandler.getMoves();
+                    log.print("\t");
                     log.printf(tpk.toString(), itemNames[tpk.heldItem]);
                     log.print(", Ability: " + romHandler.abilityName(romHandler.getAbilityForTrainerPokemon(tpk)));
                     log.print(" - ");
