@@ -307,6 +307,10 @@ public class NewRandomizerGUI {
     private JRadioButton wpThematicRadioButton;
     private JCheckBox tpMovesetMinLevelCheckBox;
     private JSpinner tpMovesetMinLevelSpinner;
+    private JCheckBox igtNoLegendariesCheckBox;
+    private JCheckBox igtGiveUnencounterableCheckBox;
+    private JCheckBox igtRequestRarePokemonCheckBox;
+    private JCheckBox igtNoStartersCheckBox;
 
     private static JFrame frame;
 
@@ -382,24 +386,25 @@ public class NewRandomizerGUI {
 
             try {
 
-                URL url = new URL(SysConstants.API_URL_ZX);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Accept", "application/json");
-                conn.setConnectTimeout(2000);
-                conn.setReadTimeout(2000);
-
-                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
-
-                String output;
-                while ((output = br.readLine()) != null) {
-                    String[] a = output.split("tag_name\":\"");
-                    if (a.length > 1) {
-                        latestVersionString = a[1].split("\",")[0];
-                    }
-                }
-
-                conn.disconnect();
+                // Commenting this out because I don't need updates
+//                URL url = new URL(SysConstants.API_URL_ZX);
+//                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+//                conn.setRequestMethod("GET");
+//                conn.setRequestProperty("Accept", "application/json");
+//                conn.setConnectTimeout(2000);
+//                conn.setReadTimeout(2000);
+//
+//                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+//
+//                String output;
+//                while ((output = br.readLine()) != null) {
+//                    String[] a = output.split("tag_name\":\"");
+//                    if (a.length > 1) {
+//                        latestVersionString = a[1].split("\",")[0];
+//                    }
+//                }
+//
+//                conn.disconnect();
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -1679,6 +1684,10 @@ public class NewRandomizerGUI {
         igtRandomizeNicknamesCheckBox.setSelected(settings.isRandomizeInGameTradesNicknames());
         igtRandomizeOTsCheckBox.setSelected(settings.isRandomizeInGameTradesOTs());
         igtUnchangedRadioButton.setSelected(settings.getInGameTradesMod() == Settings.InGameTradesMod.UNCHANGED);
+        igtGiveUnencounterableCheckBox.setSelected(settings.isRareGivensInGameTrades());
+        igtRequestRarePokemonCheckBox.setSelected(settings.isRareRequestInGameTrades());
+        igtNoLegendariesCheckBox.setSelected(settings.isNoLegendariesInGameTrades());
+        igtNoStartersCheckBox.setSelected(settings.isNoStartersInGameTrades());
 
         fiRandomRadioButton.setSelected(settings.getFieldItemsMod() == Settings.FieldItemsMod.RANDOM);
         fiRandomEvenDistributionRadioButton.setSelected(settings.getFieldItemsMod() == Settings.FieldItemsMod.RANDOM_EVEN);
@@ -1888,6 +1897,10 @@ public class NewRandomizerGUI {
         settings.setRandomizeInGameTradesIVs(igtRandomizeIVsCheckBox.isSelected());
         settings.setRandomizeInGameTradesNicknames(igtRandomizeNicknamesCheckBox.isSelected());
         settings.setRandomizeInGameTradesOTs(igtRandomizeOTsCheckBox.isSelected());
+        settings.setRareGivensInGameTrades(igtGiveUnencounterableCheckBox.isVisible() && igtGiveUnencounterableCheckBox.isSelected());
+        settings.setRareRequestInGameTrades(igtRequestRarePokemonCheckBox.isVisible() && igtRequestRarePokemonCheckBox.isSelected());
+        settings.setNoLegendariesInGameTrades(igtNoLegendariesCheckBox.isVisible() && igtNoLegendariesCheckBox.isSelected());
+        settings.setNoStartersInGameTrades(igtNoStartersCheckBox.isVisible() && igtNoStartersCheckBox.isSelected());
 
         settings.setFieldItemsMod(fiUnchangedRadioButton.isSelected(), fiShuffleRadioButton.isSelected(), fiRandomRadioButton.isSelected(), fiRandomEvenDistributionRadioButton.isSelected());
         settings.setBanBadRandomFieldItems(fiBanBadItemsCheckBox.isSelected());
@@ -2253,6 +2266,18 @@ public class NewRandomizerGUI {
         igtRandomizeOTsCheckBox.setVisible(true);
         igtRandomizeOTsCheckBox.setEnabled(false);
         igtRandomizeOTsCheckBox.setSelected(false);
+        igtGiveUnencounterableCheckBox.setVisible(true);
+        igtGiveUnencounterableCheckBox.setEnabled(false);
+        igtGiveUnencounterableCheckBox.setSelected(false);
+        igtNoLegendariesCheckBox.setVisible(true);
+        igtNoLegendariesCheckBox.setEnabled(false);
+        igtNoLegendariesCheckBox.setSelected(false);
+        igtNoStartersCheckBox.setVisible(true);
+        igtNoStartersCheckBox.setEnabled(false);
+        igtNoStartersCheckBox.setSelected(false);
+        igtRequestRarePokemonCheckBox.setVisible(true);
+        igtRequestRarePokemonCheckBox.setEnabled(false);
+        igtRequestRarePokemonCheckBox.setSelected(false);
         igtRandomizeIVsCheckBox.setVisible(true);
         igtRandomizeIVsCheckBox.setEnabled(false);
         igtRandomizeIVsCheckBox.setSelected(false);
@@ -2848,6 +2873,10 @@ public class NewRandomizerGUI {
             igtRandomizeOTsCheckBox.setEnabled(false);
             igtRandomizeIVsCheckBox.setEnabled(false);
             igtRandomizeItemsCheckBox.setEnabled(false);
+            igtGiveUnencounterableCheckBox.setEnabled(false);
+            igtRequestRarePokemonCheckBox.setEnabled(false);
+            igtNoLegendariesCheckBox.setEnabled(false);
+            igtNoStartersCheckBox.setEnabled(false);
 
             if (pokemonGeneration == 1) {
                 igtRandomizeOTsCheckBox.setVisible(false);
@@ -3339,11 +3368,28 @@ public class NewRandomizerGUI {
             igtRandomizeNicknamesCheckBox.setSelected(false);
             igtRandomizeOTsCheckBox.setEnabled(false);
             igtRandomizeOTsCheckBox.setSelected(false);
+
+            igtGiveUnencounterableCheckBox.setEnabled(false);
+            igtGiveUnencounterableCheckBox.setSelected(false);
+            igtNoLegendariesCheckBox.setEnabled(false);
+            igtNoLegendariesCheckBox.setSelected(false);
+            igtNoStartersCheckBox.setEnabled(false);
+            igtNoStartersCheckBox.setSelected(false);
         } else {
             igtRandomizeItemsCheckBox.setEnabled(true);
             igtRandomizeIVsCheckBox.setEnabled(true);
             igtRandomizeNicknamesCheckBox.setEnabled(true);
             igtRandomizeOTsCheckBox.setEnabled(true);
+            igtGiveUnencounterableCheckBox.setEnabled(true);
+            igtNoLegendariesCheckBox.setEnabled(true);
+            igtNoStartersCheckBox.setEnabled(true);
+        }
+
+        if(igtRandomizeBothRequestedGivenRadioButton.isSelected()){
+            igtRequestRarePokemonCheckBox.setEnabled(true);
+        } else {
+            igtRequestRarePokemonCheckBox.setEnabled(false);
+            igtRequestRarePokemonCheckBox.setSelected(false);
         }
 
         if (mdUpdateMovesCheckBox.isSelected()) {

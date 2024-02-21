@@ -297,6 +297,10 @@ public class Settings {
     private boolean randomizeInGameTradesOTs;
     private boolean randomizeInGameTradesIVs;
     private boolean randomizeInGameTradesItems;
+    private boolean noLegendariesInGameTrades;
+    private boolean rareGivensInGameTrades;
+    private boolean rareRequestInGameTrades;
+    private boolean noStartersInGameTrades;
 
     public enum FieldItemsMod {
         UNCHANGED, SHUFFLE, RANDOM, RANDOM_EVEN
@@ -599,6 +603,12 @@ public class Settings {
         // 52 better movesets min level
         out.write(betterMovesetsMinLevel);
 
+        // 53 In game trade options
+        out.write(makeByteSelected(noLegendariesInGameTrades,
+                rareGivensInGameTrades,
+                rareRequestInGameTrades,
+                noStartersInGameTrades));
+
         try {
             byte[] romName = this.romName.getBytes("US-ASCII");
             out.write(romName.length);
@@ -898,6 +908,11 @@ public class Settings {
         settings.setNoWildStaticPokemon(restoreState(data[51], 2));
 
         settings.setBetterMovesetsMinLevel(data[52]);
+
+        settings.setNoLegendariesInGameTrades(restoreState(data[53], 0));
+        settings.setRareGivensInGameTrades(restoreState(data[53], 1));
+        settings.setRareRequestInGameTrades(restoreState(data[53], 2));
+        settings.setNoStartersInGameTrades(restoreState(data[53], 3));
 
         int romNameLength = data[LENGTH_OF_SETTINGS_DATA] & 0xFF;
         String romName = new String(data, LENGTH_OF_SETTINGS_DATA + 1, romNameLength, "US-ASCII");
@@ -2370,6 +2385,38 @@ public class Settings {
 
     public void setBetterMovesetsMinLevel(int betterMovesetsMinLevel) {
         this.betterMovesetsMinLevel = betterMovesetsMinLevel;
+    }
+
+    public boolean isNoLegendariesInGameTrades() {
+        return noLegendariesInGameTrades;
+    }
+
+    public void setNoLegendariesInGameTrades(boolean noLegendariesInGameTrades) {
+        this.noLegendariesInGameTrades = noLegendariesInGameTrades;
+    }
+
+    public boolean isRareGivensInGameTrades() {
+        return rareGivensInGameTrades;
+    }
+
+    public void setRareGivensInGameTrades(boolean rareGivensInGameTrades) {
+        this.rareGivensInGameTrades = rareGivensInGameTrades;
+    }
+
+    public boolean isRareRequestInGameTrades() {
+        return rareRequestInGameTrades;
+    }
+
+    public void setRareRequestInGameTrades(boolean rareRequestInGameTrades) {
+        this.rareRequestInGameTrades = rareRequestInGameTrades;
+    }
+
+    public boolean isNoStartersInGameTrades() {
+        return noStartersInGameTrades;
+    }
+
+    public void setNoStartersInGameTrades(boolean noStartersInGameTrades) {
+        this.noStartersInGameTrades = noStartersInGameTrades;
     }
 
     private static int makeByteSelected(boolean... bools) {

@@ -34,6 +34,8 @@ import com.dabomstew.pkrandom.pokemon.*;
 import com.dabomstew.pkrandom.randomizers.*;
 import com.dabomstew.pkrandom.romhandlers.Gen1RomHandler;
 import com.dabomstew.pkrandom.romhandlers.RomHandler;
+import com.dabomstew.pkrandom.services.EncounterService;
+import com.dabomstew.pkrandom.services.PokemonEncounterRate;
 import com.dabomstew.pkrandom.services.PokemonService;
 
 // Can randomize a file based on settings. Output varies by seed.
@@ -103,6 +105,8 @@ public class Randomizer {
 
         PokemonService pokemonService = new PokemonService(random, romHandler, settings);
         pokemonService.checkPokemonRestrictions();
+
+        EncounterService encounterService = new EncounterService(random, romHandler, settings, pokemonService);
 
         PokemonRandomizer pokemonRandomizer = new PokemonRandomizer(random, settings, romHandler, pokemonService);
 
@@ -626,7 +630,7 @@ public class Randomizer {
             log.println("Wild Pokemon: Unchanged." + NEWLINE);
         }
 
-        logUnobtainableWildPokemon(log, pokemonService);
+        logUnobtainableWildPokemon(log, encounterService);
 
         boolean useTimeBasedEncounters = settings.isUseTimeBasedEncounters() ||
                 (settings.getWildPokemonMod() == Settings.WildPokemonMod.UNCHANGED && settings.isWildLevelsModified());
@@ -638,7 +642,7 @@ public class Randomizer {
         }
 
         // In-game trades
-        TradesRandomizer tradesRandomizer = new TradesRandomizer(random, settings, romHandler, pokemonService);
+        TradesRandomizer tradesRandomizer = new TradesRandomizer(random, settings, romHandler, pokemonService, encounterService);
         List<IngameTrade> oldTrades = romHandler.getIngameTrades();
         switch(settings.getInGameTradesMod()) {
             case RANDOMIZE_GIVEN:
@@ -1349,28 +1353,22 @@ public class Randomizer {
         log.println();
     }
 
-    private void logUnobtainableWildPokemon(final PrintStream log, final PokemonService pokemonService) {
+    private void logUnobtainableWildPokemon(final PrintStream log, final EncounterService encounterService) {
         log.println("-- Unobtainable Wild Pokemon --");
 
-        Set<Pokemon> foundPokemon = new TreeSet<>();
-        List<EncounterSet> encounterSets = romHandler.getEncounters(settings.isUseTimeBasedEncounters());
+        List<PokemonEncounterRate> encounterRateList = encounterService.getPokemonEncounterRates();
+        encounterRateList.sort(Comparator.comparingInt((PokemonEncounterRate a) -> a.pokemon.number));
 
-        for(EncounterSet area: encounterSets) {
-            for(Encounter enc : area.encounters) {
-                if(!foundPokemon.contains(enc.pokemon)) {
-                    foundPokemon.add(enc.pokemon);
-                }
-            }
-        }
-
-        List<Pokemon> allPokemon = pokemonService.getMainPokemonList();
         int notFoundCount = 0;
-        for(Pokemon p: allPokemon) {
-            if(!foundPokemon.contains(p)) {
-                log.println("[" + p.number + "] " + p.fullName());
-                ++notFoundCount;
+        for (PokemonEncounterRate rate: encounterRateList) {
+            if(rate.numEncounters > 0) {
+                continue;
             }
+
+            log.println("[" + rate.pokemon.number + "] " + rate.pokemon.fullName());
+            ++notFoundCount;
         }
+
         log.println("total unobtainable: " + notFoundCount);
 
         log.println();

@@ -2,27 +2,30 @@ package com.dabomstew.pkrandom.randomizers;
 
 import com.dabomstew.pkrandom.CustomNamesSet;
 import com.dabomstew.pkrandom.Settings;
+import com.dabomstew.pkrandom.exceptions.RandomizationException;
 import com.dabomstew.pkrandom.pokemon.IngameTrade;
 import com.dabomstew.pkrandom.pokemon.ItemList;
 import com.dabomstew.pkrandom.pokemon.Pokemon;
 import com.dabomstew.pkrandom.romhandlers.RomHandler;
+import com.dabomstew.pkrandom.services.EncounterService;
+import com.dabomstew.pkrandom.services.PokemonEncounterRate;
 import com.dabomstew.pkrandom.services.PokemonService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class TradesRandomizer {
     private final Random random;
     private final RomHandler romHandler;
     private final PokemonService pokemonService;
     private final Settings settings;
+    private final EncounterService encounterService;
 
-    public TradesRandomizer(Random random, Settings settings, RomHandler romHandler, PokemonService pokemonService) {
+    public TradesRandomizer(Random random, Settings settings, RomHandler romHandler, PokemonService pokemonService, EncounterService encounterService) {
         this.random = random;
         this.romHandler = romHandler;
         this.pokemonService = pokemonService;
         this.settings = settings;
+        this.encounterService = encounterService;
     }
 
     public void randomizeIngameTrades() {
@@ -62,8 +65,8 @@ public class TradesRandomizer {
 
         // get old trades
         List<IngameTrade> trades = romHandler.getIngameTrades();
-        List<Pokemon> usedRequests = new ArrayList<>();
-        List<Pokemon> usedGivens = new ArrayList<>();
+        Set<Pokemon> usedRequests = new TreeSet<>();
+        Set<Pokemon> usedGivens = new TreeSet<>();
         List<String> usedOTs = new ArrayList<>();
         List<String> usedNicknames = new ArrayList<>();
         ItemList possibleItems = romHandler.getAllowedItems();
@@ -71,13 +74,96 @@ public class TradesRandomizer {
         int nickCount = nicknames.size();
         int trnameCount = trainerNames.size();
 
+        List<Pokemon> banned = getBannedPokemon();
+
+        // Determine our possible options for our trades
+        List<Pokemon> allPossiblePokemon = new ArrayList<>(pokemonService.getAllPokemonWithoutNull());
+        List<Pokemon> rareGiveList = new ArrayList<>();
+        List<Pokemon> rareRequestList = new ArrayList<>();
+
+        allPossiblePokemon.removeIf(banned::contains);
+
+        // set up our list of rare pokemon.
+        if(settings.isRareGivensInGameTrades() || settings.isRareRequestInGameTrades()) {
+            List<PokemonEncounterRate> encounterRates = encounterService.getPokemonEncounterRates();
+            encounterRates.sort(Comparator.comparingInt((PokemonEncounterRate a) -> a.numEncounters));
+
+            // get the median encounter rate of all wild obtainable pokemon;
+            int indexOfFirstObtainableWildPoke = -1;
+
+            // Add all unobtainable pokemon
+            for(int i = 0; i < encounterRates.size(); ++i) {
+                Pokemon p = encounterRates.get(i).pokemon;
+                if(banned.contains(p)) {
+                    continue;
+                }
+
+                PokemonEncounterRate encounterRate = encounterRates.get(i);
+                if(encounterRate.numEncounters == 0) {
+                    rareGiveList.add(p);
+                }
+                else {
+                    indexOfFirstObtainableWildPoke = i;
+                    // We have all we need for now.
+                    break;
+                }
+            }
+
+            if(settings.isRareRequestInGameTrades() && indexOfFirstObtainableWildPoke > 0) {
+                int optionCount = (encounterRates.size() - indexOfFirstObtainableWildPoke) / 2;
+                if(optionCount < trades.size()) {
+                    optionCount = encounterRates.size() - indexOfFirstObtainableWildPoke;
+                }
+
+                for(int i = 0; i < optionCount; ++i) {
+                    int index = indexOfFirstObtainableWildPoke + i;
+                    if(banned.contains(encounterRates.get(index).pokemon)) {
+                        continue;
+                    }
+
+                    rareRequestList.add(encounterRates.get(index).pokemon);
+                }
+
+                while(rareRequestList.size() < trades.size()) {
+                    Pokemon p = this.pokemonService.getRandomPokemon();
+                    if(!rareGiveList.contains(p) && !rareRequestList.contains(p) && !banned.contains(p)) {
+                        rareRequestList.add(p);
+                    }
+                }
+            }
+
+            if(settings.isRareGivensInGameTrades() && rareGiveList.size() < trades.size()) {
+                while(rareGiveList.size() < trades.size()) {
+                    Pokemon p = this.pokemonService.getRandomPokemon();
+                    if(!rareGiveList.contains(p) && !rareRequestList.contains(p) && !banned.contains(p)) {
+                        rareGiveList.add(p);
+                    }
+                }
+            }
+        }
+
+        // Lets update our trades
         for (IngameTrade trade : trades) {
             // pick new given pokemon
             Pokemon oldgiven = trade.givenPokemon;
-            Pokemon given = this.pokemonService.getRandomPokemon();
-            while (usedGivens.contains(given)) {
-                given = this.pokemonService.getRandomPokemon();
+
+            List<Pokemon> givenList = settings.isRareGivensInGameTrades() ? rareGiveList : allPossiblePokemon;
+            List<Pokemon> requestList = settings.isRareRequestInGameTrades() ? rareRequestList : allPossiblePokemon;
+
+            // If we are preserving same pokemon trades, lets make sure to use an obtainable pokemon.
+            if(settings.isRareGivensInGameTrades() && oldgiven == trade.requestedPokemon) {
+                givenList = requestList;
             }
+
+            Pokemon given = givenList.get(random.nextInt(givenList.size()));
+            while (usedGivens.contains(given)
+                    || (oldgiven != trade.requestedPokemon
+                        && !randomizeRequest
+                        && trade.requestedPokemon != null
+                        && trade.requestedPokemon.number == given.number)) {
+                given = givenList.get(random.nextInt(givenList.size()));
+            }
+
             usedGivens.add(given);
             trade.givenPokemon = given;
 
@@ -87,9 +173,9 @@ public class TradesRandomizer {
                 trade.requestedPokemon = given;
             } else if (randomizeRequest) {
                 if (trade.requestedPokemon != null) {
-                    Pokemon request = this.pokemonService.getRandomPokemon();
-                    while (usedRequests.contains(request) || request == given) {
-                        request = this.pokemonService.getRandomPokemon();
+                    Pokemon request = requestList.get(random.nextInt(requestList.size()));
+                    while (usedRequests.contains(request) || request.number == given.number) {
+                        request = requestList.get(random.nextInt(requestList.size()));
                     }
                     usedRequests.add(request);
                     trade.requestedPokemon = request;
@@ -133,5 +219,23 @@ public class TradesRandomizer {
 
         // things that the game doesn't support should just be ignored
         romHandler.setIngameTrades(trades);
+    }
+
+    private List<Pokemon> getBannedPokemon() {
+
+        List<Pokemon> banned = new ArrayList<>(pokemonService.getBannedFormesForTrainerPokemon());
+
+        if(settings.isNoLegendariesInGameTrades()) {
+            banned.addAll(pokemonService.getOnlyLegendaryListInclFormes());
+        }
+        if(settings.isNoStartersInGameTrades()) {
+            List<Pokemon> starters = romHandler.getStarters();
+            for(Pokemon starter: starters) {
+                Set<Pokemon> relatives = pokemonService.getRelatedPokemon(starter);
+                banned.addAll(relatives);
+            }
+        }
+
+        return banned;
     }
 }
