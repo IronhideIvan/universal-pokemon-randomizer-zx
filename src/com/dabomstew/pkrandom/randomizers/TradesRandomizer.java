@@ -109,7 +109,7 @@ public class TradesRandomizer {
                 }
             }
 
-            if(settings.isRareRequestInGameTrades() && indexOfFirstObtainableWildPoke > 0) {
+            if(settings.isRareRequestInGameTrades() && indexOfFirstObtainableWildPoke >= 0) {
                 int optionCount = (encounterRates.size() - indexOfFirstObtainableWildPoke) / 2;
                 if(optionCount < trades.size()) {
                     optionCount = encounterRates.size() - indexOfFirstObtainableWildPoke;
