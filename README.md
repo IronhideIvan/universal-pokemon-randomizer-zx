@@ -1,3 +1,62 @@
+This is the IronhideIvan edit of the Universal Pokemon Randomizer ZX by Ajarmar.
+
+My primary goal is to add additional randomization options in order to randomize the games in a way
+that I would enjoy the most. I'm also breaking out the code into smaller chunks and refactoring things
+to make them easier to modify and work with (At least for me). I've appended the original readme to the bottom of my
+comments.
+
+## Randomizer Additions
+These are things which are already complete. I will try my best to explain my reasoning for the changes. My goals specifically cater to my personal preferences,
+however, so these changes might not vibe with everyone.
+1. __Options to not have starters appear in the wild or trades__. I like the idea of starters being a unique choice for the player.
+It gives the player's choice of starter significantly more impact because their will be no other, easily available, opportunity
+to catch those pokemon. (I've also added an option to remove all static pokemon in the game (Like Sudowudo in GEN2) as options for
+wild encounters. I thought it would be a neat idea but I didn't end up using it.)
+2. __Include type-themed trainer areas__. I like the idea of keeping gyms and bosses with themed teams. However, there
+were areas, like Sprout Tower in GS/HGSS, that I felt should also logically have themed trainers. So I've added
+an option to trainer randomization which includes this.
+3. __Give "Uber" trainers all legendary teams__. This is specific to HGSS and GS, since that was the game I was focused on
+when making this change. It gives Red a varied team of entirely comprised of legendary pokemon. I thought it would be fun if
+the strongest trainer in the game would have a totally OP team.
+4. __Option to set a limit as to when trainer pokemon use better movesets__. I didn't think it was fair going up against
+a trainer with a Lvl2 pidgey with hyper beam at the start of the game. So I created a new option so that only trainers
+with pokemon above a certain level will have better movesets.
+5. __Log more stuff__. I want to know more specifics when I randomize a game, or at least have information on things
+that isn't inuitively known. For example, I want to know what pokemon are unobtainable in the wild, so that I have an idea
+of what I'm physically unable to find if there's a pokemon I really want to have in a playthrough.
+6. __"Thematic" wild encounters__. I'm not a fan of total randomness, I just don't find it fun. As such, I created an option
+which tries to keep wild encounters thematically similar to what's in the vanilla game. What this boils down to is an Area 1-1 mapping 
+where an encounter in the base game will try to be replaced with a pokemon that:
+   1. Shares a type with the vanilla's primary type.
+   2. Is of a similar power level.
+7. __Options for trades to only include rare pokemon__. In other words, trades will try to request pokemon that are difficult, but not impossible,
+to obtain in the wild. At the same time, trades will offer pokemon that are rare or unobtainable in the wild. This makes trades a the opportunity to be a 
+bit more fun and worthwhile to pursue.
+8. __Starter types are unique from one another__. No two starters will share the same type at the time of the choice. I think this is
+more in the spirit of the OG games and will give the player more variety at the start of the game.
+
+## Randomizer Goals
+These are things I might want to add in the future or are things that I think would be fun.
+1. Force starters into a type triangle. Having an option to have a type triangle would be fun. I know that there are a tiny number
+of true type triangles (Wherein TYPE A attacks are strong to B pokemon, but weak to C pokemon's type attacks.), so having an additional
+option of whether a user wants a true-type or weak-type triangle would be good.
+
+## Refactoring Goals
+I don't like that most of the randomization logic sits in a monolithic `RomHandler` implementation. My ideal scenario
+would be:
+1. Create individual `Randomizer` classes to handle logically distinct pieces of randomization. For example, the logic for
+randomizing trades should not also include logic for randomizing pokemon abilities. 
+2. Create service classes for retrieving and containing widely used information from the Rom. For example,
+created a `PokemonService` class to hold the various lists of pokemon that the application needs.
+3. Remove any instances of `Random` from any `RomHandler` implementations. Logically, I feel that the RomHandler
+should be relegated solely as an interface with the ROM. It should not be doing any randomization on its own, as
+it's already a very heavy object that's doing a lot of heavy lifting with the ROM. The randomization logic should
+exist in a relevant `Randomizer`.
+
+---
+# Original README
+_Original text taken from Universal Pokemon Randomizer ZX_
+
 Universal Pokemon Randomizer ZX by Ajarmar
 
 With significant contributions from darkeye, cleartonic
