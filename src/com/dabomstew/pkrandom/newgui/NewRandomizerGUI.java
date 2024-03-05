@@ -46,6 +46,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.text.Collator;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
@@ -3879,14 +3880,32 @@ public class NewRandomizerGUI {
 
     private void populateDropdowns() {
         List<Pokemon> currentStarters = romHandler.getStarters();
-        List<Pokemon> allPokes =
+        List<Pokemon> allPokes = new ArrayList<>(
                 romHandler.generationOfPokemon() >= 6 ?
                         romHandler.getPokemonInclFormes()
                                 .stream()
                                 .filter(pk -> pk == null || !pk.actuallyCosmetic)
                                 .collect(Collectors.toList()) :
-                        romHandler.getPokemon();
+                        romHandler.getPokemon());
+
         String[] pokeNames = new String[allPokes.size()];
+
+        allPokes.sort((p1, p2) -> {
+            if (p1 == null) {
+                return -1;
+            }
+
+            if (p2 == null) {
+                return 1;
+            }
+
+            if (p1.equals(p2)) {
+                return 0;
+            }
+
+            return Collator.getInstance().compare(p1.fullName(), p2.fullName());
+        });
+
         pokeNames[0] = "Random";
         for (int i = 1; i < allPokes.size(); i++) {
             pokeNames[i] = allPokes.get(i).fullName();
