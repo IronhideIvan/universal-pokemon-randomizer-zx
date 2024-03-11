@@ -31,6 +31,7 @@ package com.dabomstew.pkrandom.romhandlers;
 import java.io.PrintStream;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.dabomstew.pkrandom.*;
 import com.dabomstew.pkrandom.constants.*;
@@ -1947,6 +1948,11 @@ public abstract class AbstractRomHandler implements RomHandler {
 
         // Done, save
         this.setMovesLearnt(movesets);
+    }
+
+    @Override
+    public List<Integer> getTmAndHmMoves() {
+        return Stream.concat(this.getTMMoves().stream(), this.getHMMoves().stream()).toList();
     }
 
     @SuppressWarnings("unchecked")

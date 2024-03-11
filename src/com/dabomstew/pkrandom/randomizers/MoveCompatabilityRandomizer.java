@@ -2,6 +2,9 @@ package com.dabomstew.pkrandom.randomizers;
 
 import com.dabomstew.pkrandom.Settings;
 import com.dabomstew.pkrandom.constants.GlobalConstants;
+import com.dabomstew.pkrandom.constants.Moves;
+import com.dabomstew.pkrandom.constants.Species;
+import com.dabomstew.pkrandom.exceptions.RandomizationException;
 import com.dabomstew.pkrandom.pokemon.Move;
 import com.dabomstew.pkrandom.pokemon.MoveLearnt;
 import com.dabomstew.pkrandom.pokemon.Pokemon;
@@ -136,6 +139,39 @@ public class MoveCompatabilityRandomizer {
 
         // Set the new compatibility
         romHandler.setTMHMCompatibility(compat);
+    }
+
+    public void letPikachuLearnSurf() {
+
+        // Find Pikachu object
+        List<Pokemon> pokemonList = pokemonService.getMainPokemonList();
+        Pokemon pikachu = null;
+        for (Pokemon pk: pokemonList) {
+            if(pk.number == Species.pikachu) {
+                pikachu = pk;
+                break;
+            }
+        }
+
+        // Leave if we couldn't find our pokemon.
+        if(pikachu == null) {
+            return;
+        }
+
+        List<Integer> tmMoves = romHandler.getTmAndHmMoves();
+        int indexOfSurf = tmMoves.indexOf(Moves.surf);
+
+        // If surf doesn't exist, then leave. (Could probably happen with other TM randomization.)
+        if(indexOfSurf < 0) {
+            return;
+        }
+
+        Map<Pokemon, boolean[]> allCompatabilites = romHandler.getTMHMCompatibility();
+        boolean[] tmCompatability = allCompatabilites.get(pikachu);
+        tmCompatability[indexOfSurf + 1] = true;
+
+        // Set the new compatibility
+        romHandler.setTMHMCompatibility(allCompatabilites);
     }
 
     private void randomizePokemonMoveCompatibility(Pokemon pkmn, boolean[] moveCompatibilityFlags,

@@ -392,6 +392,8 @@ public interface RomHandler {
     // Only needed if above mode is "MAX LENGTH WITH CLASS"
     List<Integer> getTCNameLengthsByTrainer();
 
+    List<Integer> getTmAndHmMoves();
+
     void randomizeTrainerNames(Settings settings);
 
     // ===============

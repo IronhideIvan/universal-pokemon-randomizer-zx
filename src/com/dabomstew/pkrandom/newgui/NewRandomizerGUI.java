@@ -312,6 +312,7 @@ public class NewRandomizerGUI {
     private JCheckBox igtGiveUnencounterableCheckBox;
     private JCheckBox igtRequestRarePokemonCheckBox;
     private JCheckBox igtNoStartersCheckBox;
+    private JCheckBox tmPikachuCanLearnSurfCheckBox;
 
     private static JFrame frame;
 
@@ -468,6 +469,7 @@ public class NewRandomizerGUI {
         tmUnchangedRadioButton.addActionListener(e -> enableOrDisableSubControls());
         tmRandomRadioButton.addActionListener(e -> enableOrDisableSubControls());
         tmForceGoodDamagingCheckBox.addActionListener(e -> enableOrDisableSubControls());
+        tmFullHMCompatibilityCheckBox.addActionListener(e -> enableOrDisableSubControls());
         thcUnchangedRadioButton.addActionListener(e -> enableOrDisableSubControls());
         thcRandomPreferSameTypeRadioButton.addActionListener(e -> enableOrDisableSubControls());
         thcRandomCompletelyRadioButton.addActionListener(e -> enableOrDisableSubControls());
@@ -1655,6 +1657,7 @@ public class NewRandomizerGUI {
         tmKeepFieldMoveTMsCheckBox.setSelected(settings.isKeepFieldMoveTMs());
         thcFullCompatibilityRadioButton.setSelected(settings.getTmsHmsCompatibilityMod() == Settings.TMsHMsCompatibilityMod.FULL);
         tmFullHMCompatibilityCheckBox.setSelected(settings.isFullHMCompat());
+        tmPikachuCanLearnSurfCheckBox.setSelected(settings.isTmPikachuCanLearnSurf());
         tmForceGoodDamagingCheckBox.setSelected(settings.isTmsForceGoodDamaging());
         tmForceGoodDamagingSlider.setValue(settings.getTmsGoodDamagingPercent());
         tmNoGameBreakingMovesCheckBox.setSelected(settings.isBlockBrokenTMMoves());
@@ -1878,6 +1881,7 @@ public class NewRandomizerGUI {
         settings.setTmLevelUpMoveSanity(tmLevelupMoveSanityCheckBox.isSelected());
         settings.setKeepFieldMoveTMs(tmKeepFieldMoveTMsCheckBox.isSelected());
         settings.setFullHMCompat(tmFullHMCompatibilityCheckBox.isSelected() && tmFullHMCompatibilityCheckBox.isVisible());
+        settings.setTmPikachuCanLearnSurf(tmPikachuCanLearnSurfCheckBox.isSelected());
         settings.setTmsForceGoodDamaging(tmForceGoodDamagingCheckBox.isSelected());
         settings.setTmsGoodDamagingPercent(tmForceGoodDamagingSlider.getValue());
         settings.setBlockBrokenTMMoves(tmNoGameBreakingMovesCheckBox.isSelected());
@@ -3007,9 +3011,15 @@ public class NewRandomizerGUI {
             tmUnchangedRadioButton.setEnabled(true);
             tmUnchangedRadioButton.setSelected(true);
             tmRandomRadioButton.setEnabled(true);
+
             tmFullHMCompatibilityCheckBox.setVisible(pokemonGeneration < 7);
             if (tmFullHMCompatibilityCheckBox.isVisible()) {
                 tmFullHMCompatibilityCheckBox.setEnabled(true);
+            }
+
+            tmPikachuCanLearnSurfCheckBox.setVisible(pokemonGeneration < 7);
+            if(tmPikachuCanLearnSurfCheckBox.isVisible()) {
+                tmPikachuCanLearnSurfCheckBox.setEnabled(true);
             }
 
             thcUnchangedRadioButton.setEnabled(true);
@@ -3764,6 +3774,15 @@ public class NewRandomizerGUI {
         }
 
         tmFullHMCompatibilityCheckBox.setEnabled(!thcFullCompatibilityRadioButton.isSelected());
+        if(tmPikachuCanLearnSurfCheckBox.isVisible()) {
+            if(thcFullCompatibilityRadioButton.isSelected() || tmFullHMCompatibilityCheckBox.isSelected()){
+                tmPikachuCanLearnSurfCheckBox.setEnabled(false);
+                tmPikachuCanLearnSurfCheckBox.setSelected(false);
+            }
+            else {
+                tmPikachuCanLearnSurfCheckBox.setEnabled(true);
+            }
+        }
 
         if (fiRandomRadioButton.isSelected() && fiRandomRadioButton.isVisible() && fiRandomRadioButton.isEnabled()) {
             fiBanBadItemsCheckBox.setEnabled(true);

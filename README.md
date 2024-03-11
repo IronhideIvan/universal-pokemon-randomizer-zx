@@ -34,6 +34,8 @@ to obtain in the wild. At the same time, trades will offer pokemon that are rare
 bit more fun and worthwhile to pursue.
 8. __Starter types are unique from one another__. No two starters will share the same type at the time of the choice. I think this is
 more in the spirit of the OG games and will give the player more variety at the start of the game.
+9. __Option to give Pikachu Surf__. This is an, admittedly, silly and niche addition. Surfing pikachu has regularly been an
+event-only exclusive prior to Gen 8, and I wanted to bring that into the earlier generations if possible.
 
 ## Randomizer Goals
 These are things I might want to add in the future or are things that I think would be fun.

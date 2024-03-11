@@ -281,6 +281,7 @@ public class Settings {
     private int tutorsGoodDamagingPercent = 0;
     private boolean blockBrokenTutorMoves;
     private boolean tutorFollowEvolutions;
+    private boolean tmPikachuCanLearnSurf;
 
     public enum MoveTutorsCompatibilityMod {
         UNCHANGED, RANDOM_PREFER_TYPE, COMPLETELY_RANDOM, FULL
@@ -453,7 +454,7 @@ public class Settings {
                 tmsHmsCompatibilityMod == TMsHMsCompatibilityMod.FULL));
 
         // 19 tms part 2
-        out.write(makeByteSelected(fullHMCompat, tmsFollowEvolutions, tutorFollowEvolutions));
+        out.write(makeByteSelected(fullHMCompat, tmsFollowEvolutions, tutorFollowEvolutions, tmPikachuCanLearnSurf));
 
         // 20 tms good damaging
         out.write((tmsForceGoodDamaging ? 0x80 : 0) | tmsGoodDamagingPercent);
@@ -759,6 +760,7 @@ public class Settings {
         settings.setFullHMCompat(restoreState(data[19], 0));
         settings.setTmsFollowEvolutions(restoreState(data[19], 1));
         settings.setTutorFollowEvolutions(restoreState(data[19], 2));
+        settings.setTmPikachuCanLearnSurf(restoreState(data[19], 3));
 
         settings.setTmsForceGoodDamaging(restoreState(data[20], 7));
         settings.setTmsGoodDamagingPercent(data[20] & 0x7F);
@@ -2417,6 +2419,14 @@ public class Settings {
 
     public void setNoStartersInGameTrades(boolean noStartersInGameTrades) {
         this.noStartersInGameTrades = noStartersInGameTrades;
+    }
+
+    public boolean isTmPikachuCanLearnSurf() {
+        return tmPikachuCanLearnSurf;
+    }
+
+    public void setTmPikachuCanLearnSurf(boolean tmPikachuCanLearnSurf) {
+        this.tmPikachuCanLearnSurf = tmPikachuCanLearnSurf;
     }
 
     private static int makeByteSelected(boolean... bools) {

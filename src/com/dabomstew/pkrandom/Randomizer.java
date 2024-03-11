@@ -384,6 +384,11 @@ public class Randomizer {
             tmsHmsCompatChanged = true;
         }
 
+        if(settings.isTmPikachuCanLearnSurf()) {
+            moveCompatabilityRandomizer.letPikachuLearnSurf();
+            tmsHmsCompatChanged = true;
+        }
+
         // Copy TM/HM compatibility to cosmetic formes if it was changed at all, and log changes
         if (tmsHmsCompatChanged) {
             moveCompatabilityRandomizer.copyTMCompatibilityToCosmeticFormes();
