@@ -329,8 +329,6 @@ public interface RomHandler {
 
     void setTMMoves(List<Integer> moveIndexes);
 
-    void randomizeTMMoves(Settings settings);
-
     int getTMCount();
 
     int getHMCount();
@@ -349,21 +347,14 @@ public interface RomHandler {
 
     void setTMHMCompatibility(Map<Pokemon, boolean[]> compatData);
 
-    void randomizeTMHMCompatibility(Settings settings);
+    void copyUpEvolutions(AbstractRomHandler.BasePokemonAction bpAction, AbstractRomHandler.EvolvedPokemonAction epAction);
 
-    void fullTMHMCompatibility();
-
-    void ensureTMCompatSanity();
-
-    void ensureTMEvolutionSanity();
-
-    void fullHMCompatibility();
+    void copyUpEvolutions(AbstractRomHandler.BasePokemonAction bpAction, AbstractRomHandler.EvolvedPokemonAction epAction,
+                          AbstractRomHandler.EvolvedPokemonAction splitAction, boolean copySplitEvos);
 
     // ===========
     // Move Tutors
     // ===========
-
-    void copyTMCompatibilityToCosmeticFormes();
 
     boolean hasMoveTutors();
 
@@ -371,25 +362,13 @@ public interface RomHandler {
 
     void setMoveTutorMoves(List<Integer> moves);
 
-    void randomizeMoveTutorMoves(Settings settings);
-
     Map<Pokemon, boolean[]> getMoveTutorCompatibility();
 
     void setMoveTutorCompatibility(Map<Pokemon, boolean[]> compatData);
 
-    void randomizeMoveTutorCompatibility(Settings settings);
-
-    void fullMoveTutorCompatibility();
-
-    void ensureMoveTutorCompatSanity();
-
-    void ensureMoveTutorEvolutionSanity();
-
     // =============
     // Trainer Names
     // =============
-
-    void copyMoveTutorCompatibilityToCosmeticFormes();
 
     boolean canChangeTrainerText();
 

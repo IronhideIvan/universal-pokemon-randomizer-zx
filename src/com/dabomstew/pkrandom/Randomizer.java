@@ -334,10 +334,11 @@ public class Randomizer {
         }
 
         // TMs
+        MoveCompatabilityRandomizer moveCompatabilityRandomizer = new MoveCompatabilityRandomizer(random, settings, romHandler, pokemonService);
 
         if (!(settings.getMovesetsMod() == Settings.MovesetsMod.METRONOME_ONLY)
                 && settings.getTmsMod() == Settings.TMsMod.RANDOM) {
-            romHandler.randomizeTMMoves(settings);
+            moveCompatabilityRandomizer.randomizeTMMoves();
             tmMovesChanged = true;
         }
 
@@ -359,11 +360,11 @@ public class Randomizer {
         switch (settings.getTmsHmsCompatibilityMod()) {
             case COMPLETELY_RANDOM:
             case RANDOM_PREFER_TYPE:
-                romHandler.randomizeTMHMCompatibility(settings);
+                moveCompatabilityRandomizer.randomizeTMHMCompatibility();
                 tmsHmsCompatChanged = true;
                 break;
             case FULL:
-                romHandler.fullTMHMCompatibility();
+                moveCompatabilityRandomizer.fullTMHMCompatibility();
                 tmsHmsCompatChanged = true;
                 break;
             default:
@@ -371,21 +372,21 @@ public class Randomizer {
         }
 
         if (settings.isTmLevelUpMoveSanity()) {
-            romHandler.ensureTMCompatSanity();
+            moveCompatabilityRandomizer.ensureTMCompatSanity();
             if (settings.isTmsFollowEvolutions()) {
-                romHandler.ensureTMEvolutionSanity();
+                moveCompatabilityRandomizer.ensureTMEvolutionSanity();
             }
             tmsHmsCompatChanged = true;
         }
 
         if (settings.isFullHMCompat()) {
-            romHandler.fullHMCompatibility();
+            moveCompatabilityRandomizer.fullHMCompatibility();
             tmsHmsCompatChanged = true;
         }
 
         // Copy TM/HM compatibility to cosmetic formes if it was changed at all, and log changes
         if (tmsHmsCompatChanged) {
-            romHandler.copyTMCompatibilityToCosmeticFormes();
+            moveCompatabilityRandomizer.copyTMCompatibilityToCosmeticFormes();
             logTMHMCompatibility(log);
         }
 
@@ -397,7 +398,7 @@ public class Randomizer {
             if (!(settings.getMovesetsMod() == Settings.MovesetsMod.METRONOME_ONLY)
                     && settings.getMoveTutorMovesMod() == Settings.MoveTutorMovesMod.RANDOM) {
 
-                romHandler.randomizeMoveTutorMoves(settings);
+                moveCompatabilityRandomizer.randomizeMoveTutorMoves();
                 moveTutorMovesChanged = true;
             }
 
@@ -418,11 +419,11 @@ public class Randomizer {
             switch (settings.getMoveTutorsCompatibilityMod()) {
                 case COMPLETELY_RANDOM:
                 case RANDOM_PREFER_TYPE:
-                    romHandler.randomizeMoveTutorCompatibility(settings);
+                    moveCompatabilityRandomizer.randomizeMoveTutorCompatibility();
                     tutorCompatChanged = true;
                     break;
                 case FULL:
-                    romHandler.fullMoveTutorCompatibility();
+                    moveCompatabilityRandomizer.fullMoveTutorCompatibility();
                     tutorCompatChanged = true;
                     break;
                 default:
@@ -430,16 +431,16 @@ public class Randomizer {
             }
 
             if (settings.isTutorLevelUpMoveSanity()) {
-                romHandler.ensureMoveTutorCompatSanity();
+                moveCompatabilityRandomizer.ensureMoveTutorCompatSanity();
                 if (settings.isTutorFollowEvolutions()) {
-                    romHandler.ensureMoveTutorEvolutionSanity();
+                    moveCompatabilityRandomizer.ensureMoveTutorEvolutionSanity();
                 }
                 tutorCompatChanged = true;
             }
 
             // Copy move tutor compatibility to cosmetic formes if it was changed at all
             if (tutorCompatChanged) {
-                romHandler.copyMoveTutorCompatibilityToCosmeticFormes();
+                moveCompatabilityRandomizer.copyMoveTutorCompatibilityToCosmeticFormes();
                 logTutorCompatibility(log);
             }
 

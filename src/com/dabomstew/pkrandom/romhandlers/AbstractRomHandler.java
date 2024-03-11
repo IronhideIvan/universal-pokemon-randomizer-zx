@@ -71,7 +71,7 @@ public abstract class AbstractRomHandler implements RomHandler {
         boolean megaEvolutionSanity = settings.isBaseStatsFollowMegaEvolutions();
 
         if (evolutionSanity) {
-            copyUpEvolutionsHelper(pk -> pk.shuffleStats(AbstractRomHandler.this.random),
+            copyUpEvolutions(pk -> pk.shuffleStats(AbstractRomHandler.this.random),
                     (evFrom, evTo, toMonIsFinalEvo) -> evTo.copyShuffledStatsUpEvolution(evFrom)
             );
         } else {
@@ -107,13 +107,13 @@ public abstract class AbstractRomHandler implements RomHandler {
 
         if (evolutionSanity) {
             if (assignEvoStatsRandomly) {
-                copyUpEvolutionsHelper(pk -> pk.randomizeStatsWithinBST(AbstractRomHandler.this.random),
+                copyUpEvolutions(pk -> pk.randomizeStatsWithinBST(AbstractRomHandler.this.random),
                         (evFrom, evTo, toMonIsFinalEvo) -> evTo.assignNewStatsForEvolution(evFrom, this.random),
                         (evFrom, evTo, toMonIsFinalEvo) -> evTo.assignNewStatsForEvolution(evFrom, this.random),
                         true
                 );
             } else {
-                copyUpEvolutionsHelper(pk -> pk.randomizeStatsWithinBST(AbstractRomHandler.this.random),
+                copyUpEvolutions(pk -> pk.randomizeStatsWithinBST(AbstractRomHandler.this.random),
                         (evFrom, evTo, toMonIsFinalEvo) -> evTo.copyRandomizedStatsUpEvolution(evFrom),
                         (evFrom, evTo, toMonIsFinalEvo) -> evTo.assignNewStatsForEvolution(evFrom, this.random),
                         true
@@ -214,7 +214,7 @@ public abstract class AbstractRomHandler implements RomHandler {
         List<Pokemon> allPokes = this.getPokemonInclFormes();
         if (evolutionSanity) {
             // Type randomization with evolution sanity
-            copyUpEvolutionsHelper(pk -> {
+            copyUpEvolutions(pk -> {
                 // Step 1: Basic or Excluded From Copying Pokemon
                 // A Basic/EFC pokemon has a 35% chance of a second type if
                 // it has an evolution that copies type/stats, a 50% chance
@@ -345,7 +345,7 @@ public abstract class AbstractRomHandler implements RomHandler {
             // copy abilities straight up evolution lines
             // still keep WG as an exception, though
 
-            copyUpEvolutionsHelper(pk -> {
+            copyUpEvolutions(pk -> {
                 if (pk.ability1 != Abilities.wonderGuard
                         && pk.ability2 != Abilities.wonderGuard
                         && pk.ability3 != Abilities.wonderGuard) {
@@ -1949,459 +1949,6 @@ public abstract class AbstractRomHandler implements RomHandler {
         this.setMovesLearnt(movesets);
     }
 
-    @Override
-    public void randomizeTMMoves(Settings settings) {
-        boolean noBroken = settings.isBlockBrokenTMMoves();
-        boolean preserveField = settings.isKeepFieldMoveTMs();
-        double goodDamagingPercentage = settings.isTmsForceGoodDamaging() ? settings.getTmsGoodDamagingPercent() / 100.0 : 0;
-
-        // Pick some random TM moves.
-        int tmCount = this.getTMCount();
-        List<Move> allMoves = this.getMoves();
-        List<Integer> hms = this.getHMMoves();
-        List<Integer> oldTMs = this.getTMMoves();
-        @SuppressWarnings("unchecked")
-        List<Integer> banned = new ArrayList<Integer>(noBroken ? this.getGameBreakingMoves() : Collections.EMPTY_LIST);
-        banned.addAll(getMovesBannedFromLevelup());
-        banned.addAll(this.getIllegalMoves());
-        // field moves?
-        List<Integer> fieldMoves = this.getFieldMoves();
-        int preservedFieldMoveCount = 0;
-
-        if (preserveField) {
-            List<Integer> banExistingField = new ArrayList<>(oldTMs);
-            banExistingField.retainAll(fieldMoves);
-            preservedFieldMoveCount = banExistingField.size();
-            banned.addAll(banExistingField);
-        }
-
-        // Determine which moves are pickable
-        List<Move> usableMoves = new ArrayList<>(allMoves);
-        usableMoves.remove(0); // remove null entry
-        Set<Move> unusableMoves = new HashSet<>();
-        Set<Move> unusableDamagingMoves = new HashSet<>();
-
-        for (Move mv : usableMoves) {
-            if (GlobalConstants.bannedRandomMoves[mv.number] || GlobalConstants.zMoves.contains(mv.number) ||
-                    hms.contains(mv.number) || banned.contains(mv.number)) {
-                unusableMoves.add(mv);
-            } else if (GlobalConstants.bannedForDamagingMove[mv.number] || !mv.isGoodDamaging(perfectAccuracy)) {
-                unusableDamagingMoves.add(mv);
-            }
-        }
-
-        usableMoves.removeAll(unusableMoves);
-        List<Move> usableDamagingMoves = new ArrayList<>(usableMoves);
-        usableDamagingMoves.removeAll(unusableDamagingMoves);
-
-        // pick (tmCount - preservedFieldMoveCount) moves
-        List<Integer> pickedMoves = new ArrayList<>();
-
-        // Force a certain amount of good damaging moves depending on the percentage
-        int goodDamagingLeft = (int)Math.round(goodDamagingPercentage * (tmCount - preservedFieldMoveCount));
-
-        for (int i = 0; i < tmCount - preservedFieldMoveCount; i++) {
-            Move chosenMove;
-            if (goodDamagingLeft > 0 && usableDamagingMoves.size() > 0) {
-                chosenMove = usableDamagingMoves.get(random.nextInt(usableDamagingMoves.size()));
-            } else {
-                chosenMove = usableMoves.get(random.nextInt(usableMoves.size()));
-            }
-            pickedMoves.add(chosenMove.number);
-            usableMoves.remove(chosenMove);
-            usableDamagingMoves.remove(chosenMove);
-            goodDamagingLeft--;
-        }
-
-        // shuffle the picked moves because high goodDamagingPercentage
-        // will bias them towards early numbers otherwise
-
-        Collections.shuffle(pickedMoves, random);
-
-        // finally, distribute them as tms
-        int pickedMoveIndex = 0;
-        List<Integer> newTMs = new ArrayList<>();
-
-        for (int i = 0; i < tmCount; i++) {
-            if (preserveField && fieldMoves.contains(oldTMs.get(i))) {
-                newTMs.add(oldTMs.get(i));
-            } else {
-                newTMs.add(pickedMoves.get(pickedMoveIndex++));
-            }
-        }
-
-        this.setTMMoves(newTMs);
-    }
-
-    @Override
-    public void randomizeTMHMCompatibility(Settings settings) {
-        boolean preferSameType = settings.getTmsHmsCompatibilityMod() == Settings.TMsHMsCompatibilityMod.RANDOM_PREFER_TYPE;
-        boolean followEvolutions = settings.isTmsFollowEvolutions();
-
-        // Get current compatibility
-        // increase HM chances if required early on
-        List<Integer> requiredEarlyOn = this.getEarlyRequiredHMMoves();
-        Map<Pokemon, boolean[]> compat = this.getTMHMCompatibility();
-        List<Integer> tmHMs = new ArrayList<>(this.getTMMoves());
-        tmHMs.addAll(this.getHMMoves());
-
-        if (followEvolutions) {
-            copyUpEvolutionsHelper(pk -> randomizePokemonMoveCompatibility(
-                    pk, compat.get(pk), tmHMs, requiredEarlyOn, preferSameType),
-            (evFrom, evTo, toMonIsFinalEvo) ->  copyPokemonMoveCompatibilityUpEvolutions(
-                    evFrom, evTo, compat.get(evFrom), compat.get(evTo), tmHMs, preferSameType
-            ), null, true);
-        }
-        else {
-            for (Map.Entry<Pokemon, boolean[]> compatEntry : compat.entrySet()) {
-                randomizePokemonMoveCompatibility(compatEntry.getKey(), compatEntry.getValue(), tmHMs,
-                        requiredEarlyOn, preferSameType);
-            }
-        }
-
-        // Set the new compatibility
-        this.setTMHMCompatibility(compat);
-    }
-
-    private void randomizePokemonMoveCompatibility(Pokemon pkmn, boolean[] moveCompatibilityFlags,
-                                                   List<Integer> moveIDs, List<Integer> prioritizedMoves,
-                                                   boolean preferSameType) {
-        List<Move> moveData = this.getMoves();
-        for (int i = 1; i <= moveIDs.size(); i++) {
-            int move = moveIDs.get(i - 1);
-            Move mv = moveData.get(move);
-            double probability = getMoveCompatibilityProbability(
-                    pkmn,
-                    mv,
-                    prioritizedMoves.contains(move),
-                    preferSameType
-            );
-            moveCompatibilityFlags[i] = (this.random.nextDouble() < probability);
-        }
-    }
-
-    private void copyPokemonMoveCompatibilityUpEvolutions(Pokemon evFrom, Pokemon evTo, boolean[] prevCompatibilityFlags,
-                                                          boolean[] toCompatibilityFlags, List<Integer> moveIDs,
-                                                          boolean preferSameType) {
-        List<Move> moveData = this.getMoves();
-        for (int i = 1; i <= moveIDs.size(); i++) {
-            if (!prevCompatibilityFlags[i]) {
-                // Slight chance to gain TM/HM compatibility for a move if not learned by an earlier evolution step
-                // Without prefer same type: 25% chance
-                // With prefer same type:    10% chance, 90% chance for a type new to this evolution
-                int move = moveIDs.get(i - 1);
-                Move mv = moveData.get(move);
-                double probability = 0.25;
-                if (preferSameType) {
-                    probability = 0.1;
-                    if (evTo.primaryType.equals(mv.type)
-                            && !evTo.primaryType.equals(evFrom.primaryType) && !evTo.primaryType.equals(evFrom.secondaryType)
-                            || evTo.secondaryType != null && evTo.secondaryType.equals(mv.type)
-                            && !evTo.secondaryType.equals(evFrom.secondaryType) && !evTo.secondaryType.equals(evFrom.primaryType)) {
-                        probability = 0.9;
-                    }
-                }
-                toCompatibilityFlags[i] = (this.random.nextDouble() < probability);
-            }
-            else {
-                toCompatibilityFlags[i] = prevCompatibilityFlags[i];
-            }
-        }
-    }
-
-    private double getMoveCompatibilityProbability(Pokemon pkmn, Move mv, boolean requiredEarlyOn,
-                                                  boolean preferSameType) {
-            double probability = 0.5;
-            if (preferSameType) {
-                if (pkmn.primaryType.equals(mv.type)
-                        || (pkmn.secondaryType != null && pkmn.secondaryType.equals(mv.type))) {
-                    probability = 0.9;
-                } else if (mv.type != null && mv.type.equals(Type.NORMAL)) {
-                    probability = 0.5;
-                } else {
-                    probability = 0.25;
-                }
-            }
-            if (requiredEarlyOn) {
-                probability = Math.min(1.0, probability * 1.8);
-            }
-            return probability;
-    }
-
-    @Override
-    public void fullTMHMCompatibility() {
-        Map<Pokemon, boolean[]> compat = this.getTMHMCompatibility();
-        for (Map.Entry<Pokemon, boolean[]> compatEntry : compat.entrySet()) {
-            boolean[] flags = compatEntry.getValue();
-            for (int i = 1; i < flags.length; i++) {
-                flags[i] = true;
-            }
-        }
-        this.setTMHMCompatibility(compat);
-    }
-
-    @Override
-    public void ensureTMCompatSanity() {
-        // if a pokemon learns a move in its moveset
-        // and there is a TM of that move, make sure
-        // that TM can be learned.
-        Map<Pokemon, boolean[]> compat = this.getTMHMCompatibility();
-        Map<Integer, List<MoveLearnt>> movesets = this.getMovesLearnt();
-        List<Integer> tmMoves = this.getTMMoves();
-        for (Pokemon pkmn : compat.keySet()) {
-            List<MoveLearnt> moveset = movesets.get(pkmn.number);
-            boolean[] pkmnCompat = compat.get(pkmn);
-            for (MoveLearnt ml : moveset) {
-                if (tmMoves.contains(ml.move)) {
-                    int tmIndex = tmMoves.indexOf(ml.move);
-                    pkmnCompat[tmIndex + 1] = true;
-                }
-            }
-        }
-        this.setTMHMCompatibility(compat);
-    }
-
-    @Override
-    public void ensureTMEvolutionSanity() {
-        Map<Pokemon, boolean[]> compat = this.getTMHMCompatibility();
-        // Don't do anything with the base, just copy upwards to ensure later evolutions retain learn compatibility
-        copyUpEvolutionsHelper(pk -> {}, ((evFrom, evTo, toMonIsFinalEvo) -> {
-            boolean[] fromCompat = compat.get(evFrom);
-            boolean[] toCompat = compat.get(evTo);
-            for (int i = 1; i < toCompat.length; i++) {
-                toCompat[i] |= fromCompat[i];
-            }
-        }), null, true);
-        this.setTMHMCompatibility(compat);
-    }
-
-    @Override
-    public void fullHMCompatibility() {
-        Map<Pokemon, boolean[]> compat = this.getTMHMCompatibility();
-        int tmCount = this.getTMCount();
-        for (boolean[] flags : compat.values()) {
-            for (int i = tmCount + 1; i < flags.length; i++) {
-                flags[i] = true;
-            }
-        }
-
-        // Set the new compatibility
-        this.setTMHMCompatibility(compat);
-    }
-
-    @Override
-    public void copyTMCompatibilityToCosmeticFormes() {
-        Map<Pokemon, boolean[]> compat = this.getTMHMCompatibility();
-
-        for (Map.Entry<Pokemon, boolean[]> compatEntry : compat.entrySet()) {
-            Pokemon pkmn = compatEntry.getKey();
-            boolean[] flags = compatEntry.getValue();
-            if (pkmn.actuallyCosmetic) {
-                boolean[] baseFlags = compat.get(pkmn.baseForme);
-                for (int i = 1; i < flags.length; i++) {
-                    flags[i] = baseFlags[i];
-                }
-            }
-        }
-
-        this.setTMHMCompatibility(compat);
-    }
-
-    @Override
-    public void randomizeMoveTutorMoves(Settings settings) {
-        boolean noBroken = settings.isBlockBrokenTutorMoves();
-        boolean preserveField = settings.isKeepFieldMoveTutors();
-        double goodDamagingPercentage = settings.isTutorsForceGoodDamaging() ? settings.getTutorsGoodDamagingPercent() / 100.0 : 0;
-
-        if (!this.hasMoveTutors()) {
-            return;
-        }
-
-        // Pick some random Move Tutor moves, excluding TMs.
-        List<Move> allMoves = this.getMoves();
-        List<Integer> tms = this.getTMMoves();
-        List<Integer> oldMTs = this.getMoveTutorMoves();
-        int mtCount = oldMTs.size();
-        List<Integer> hms = this.getHMMoves();
-        @SuppressWarnings("unchecked")
-        List<Integer> banned = new ArrayList<Integer>(noBroken ? this.getGameBreakingMoves() : Collections.EMPTY_LIST);
-        banned.addAll(getMovesBannedFromLevelup());
-        banned.addAll(this.getIllegalMoves());
-
-        // field moves?
-        List<Integer> fieldMoves = this.getFieldMoves();
-        int preservedFieldMoveCount = 0;
-        if (preserveField) {
-            List<Integer> banExistingField = new ArrayList<>(oldMTs);
-            banExistingField.retainAll(fieldMoves);
-            preservedFieldMoveCount = banExistingField.size();
-            banned.addAll(banExistingField);
-        }
-
-        // Determine which moves are pickable
-        List<Move> usableMoves = new ArrayList<>(allMoves);
-        usableMoves.remove(0); // remove null entry
-        Set<Move> unusableMoves = new HashSet<>();
-        Set<Move> unusableDamagingMoves = new HashSet<>();
-
-        for (Move mv : usableMoves) {
-            if (GlobalConstants.bannedRandomMoves[mv.number] || tms.contains(mv.number) || hms.contains(mv.number)
-                    || banned.contains(mv.number) || GlobalConstants.zMoves.contains(mv.number)) {
-                unusableMoves.add(mv);
-            } else if (GlobalConstants.bannedForDamagingMove[mv.number] || !mv.isGoodDamaging(perfectAccuracy)) {
-                unusableDamagingMoves.add(mv);
-            }
-        }
-
-        usableMoves.removeAll(unusableMoves);
-        List<Move> usableDamagingMoves = new ArrayList<>(usableMoves);
-        usableDamagingMoves.removeAll(unusableDamagingMoves);
-
-        // pick (tmCount - preservedFieldMoveCount) moves
-        List<Integer> pickedMoves = new ArrayList<>();
-
-        // Force a certain amount of good damaging moves depending on the percentage
-        int goodDamagingLeft = (int)Math.round(goodDamagingPercentage * (mtCount - preservedFieldMoveCount));
-
-        for (int i = 0; i < mtCount - preservedFieldMoveCount; i++) {
-            Move chosenMove;
-            if (goodDamagingLeft > 0 && usableDamagingMoves.size() > 0) {
-                chosenMove = usableDamagingMoves.get(random.nextInt(usableDamagingMoves.size()));
-            } else {
-                chosenMove = usableMoves.get(random.nextInt(usableMoves.size()));
-            }
-            pickedMoves.add(chosenMove.number);
-            usableMoves.remove(chosenMove);
-            usableDamagingMoves.remove(chosenMove);
-            goodDamagingLeft--;
-        }
-
-        // shuffle the picked moves because high goodDamagingPercentage
-        // will bias them towards early numbers otherwise
-
-        Collections.shuffle(pickedMoves, random);
-
-        // finally, distribute them as tutors
-        int pickedMoveIndex = 0;
-        List<Integer> newMTs = new ArrayList<>();
-
-        for (Integer oldMT : oldMTs) {
-            if (preserveField && fieldMoves.contains(oldMT)) {
-                newMTs.add(oldMT);
-            } else {
-                newMTs.add(pickedMoves.get(pickedMoveIndex++));
-            }
-        }
-
-        this.setMoveTutorMoves(newMTs);
-    }
-
-    @Override
-    public void randomizeMoveTutorCompatibility(Settings settings) {
-        boolean preferSameType = settings.getMoveTutorsCompatibilityMod() == Settings.MoveTutorsCompatibilityMod.RANDOM_PREFER_TYPE;
-        boolean followEvolutions = settings.isTutorFollowEvolutions();
-
-        if (!this.hasMoveTutors()) {
-            return;
-        }
-        // Get current compatibility
-        Map<Pokemon, boolean[]> compat = this.getMoveTutorCompatibility();
-        List<Integer> mts = this.getMoveTutorMoves();
-
-        // Empty list
-        List<Integer> priorityTutors = new ArrayList<Integer>();
-
-        if (followEvolutions) {
-            copyUpEvolutionsHelper(pk -> randomizePokemonMoveCompatibility(
-                    pk, compat.get(pk), mts, priorityTutors, preferSameType),
-                    (evFrom, evTo, toMonIsFinalEvo) ->  copyPokemonMoveCompatibilityUpEvolutions(
-                            evFrom, evTo, compat.get(evFrom), compat.get(evTo), mts, preferSameType
-                    ), null, true);
-        }
-        else {
-            for (Map.Entry<Pokemon, boolean[]> compatEntry : compat.entrySet()) {
-                randomizePokemonMoveCompatibility(compatEntry.getKey(), compatEntry.getValue(), mts, priorityTutors, preferSameType);
-            }
-        }
-
-        // Set the new compatibility
-        this.setMoveTutorCompatibility(compat);
-    }
-
-    @Override
-    public void fullMoveTutorCompatibility() {
-        if (!this.hasMoveTutors()) {
-            return;
-        }
-        Map<Pokemon, boolean[]> compat = this.getMoveTutorCompatibility();
-        for (Map.Entry<Pokemon, boolean[]> compatEntry : compat.entrySet()) {
-            boolean[] flags = compatEntry.getValue();
-            for (int i = 1; i < flags.length; i++) {
-                flags[i] = true;
-            }
-        }
-        this.setMoveTutorCompatibility(compat);
-    }
-
-    @Override
-    public void ensureMoveTutorCompatSanity() {
-        if (!this.hasMoveTutors()) {
-            return;
-        }
-        // if a pokemon learns a move in its moveset
-        // and there is a tutor of that move, make sure
-        // that tutor can be learned.
-        Map<Pokemon, boolean[]> compat = this.getMoveTutorCompatibility();
-        Map<Integer, List<MoveLearnt>> movesets = this.getMovesLearnt();
-        List<Integer> mtMoves = this.getMoveTutorMoves();
-        for (Pokemon pkmn : compat.keySet()) {
-            List<MoveLearnt> moveset = movesets.get(pkmn.number);
-            boolean[] pkmnCompat = compat.get(pkmn);
-            for (MoveLearnt ml : moveset) {
-                if (mtMoves.contains(ml.move)) {
-                    int mtIndex = mtMoves.indexOf(ml.move);
-                    pkmnCompat[mtIndex + 1] = true;
-                }
-            }
-        }
-        this.setMoveTutorCompatibility(compat);
-    }
-
-    @Override
-    public void ensureMoveTutorEvolutionSanity() {
-        if (!this.hasMoveTutors()) {
-            return;
-        }
-        Map<Pokemon, boolean[]> compat = this.getMoveTutorCompatibility();
-        // Don't do anything with the base, just copy upwards to ensure later evolutions retain learn compatibility
-        copyUpEvolutionsHelper(pk -> {}, ((evFrom, evTo, toMonIsFinalEvo) -> {
-            boolean[] fromCompat = compat.get(evFrom);
-            boolean[] toCompat = compat.get(evTo);
-            for (int i = 1; i < toCompat.length; i++) {
-                toCompat[i] |= fromCompat[i];
-            }
-        }), null, true);
-        this.setMoveTutorCompatibility(compat);
-    }
-
-    @Override
-    public void copyMoveTutorCompatibilityToCosmeticFormes() {
-        Map<Pokemon, boolean[]> compat = this.getMoveTutorCompatibility();
-
-        for (Map.Entry<Pokemon, boolean[]> compatEntry : compat.entrySet()) {
-            Pokemon pkmn = compatEntry.getKey();
-            boolean[] flags = compatEntry.getValue();
-            if (pkmn.actuallyCosmetic) {
-                boolean[] baseFlags = compat.get(pkmn.baseForme);
-                for (int i = 1; i < flags.length; i++) {
-                    flags[i] = baseFlags[i];
-                }
-            }
-        }
-
-        this.setMoveTutorCompatibility(compat);
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public void randomizeTrainerNames(Settings settings) {
@@ -3077,15 +2624,15 @@ public abstract class AbstractRomHandler implements RomHandler {
                 true, additional));
     }
 
-    private interface BasePokemonAction {
+    public interface BasePokemonAction {
         void applyTo(Pokemon pk);
     }
 
-    private interface EvolvedPokemonAction {
+    public interface EvolvedPokemonAction {
         void applyTo(Pokemon evFrom, Pokemon evTo, boolean toMonIsFinalEvo);
     }
 
-    private interface CosmeticFormAction {
+    public interface CosmeticFormAction {
         void applyTo(Pokemon pk, Pokemon baseForme);
     }
 
@@ -3099,8 +2646,9 @@ public abstract class AbstractRomHandler implements RomHandler {
      * @param copySplitEvos
      *            If true, treat split evolutions the same way as base Pokemon
      */
-    private void copyUpEvolutionsHelper(BasePokemonAction bpAction, EvolvedPokemonAction epAction,
-                                        EvolvedPokemonAction splitAction, boolean copySplitEvos) {
+    @Override
+    public void copyUpEvolutions(BasePokemonAction bpAction, EvolvedPokemonAction epAction,
+                                  EvolvedPokemonAction splitAction, boolean copySplitEvos) {
         List<Pokemon> allPokes = this.getPokemonInclFormes();
         for (Pokemon pk : allPokes) {
             if (pk != null) {
@@ -3163,8 +2711,9 @@ public abstract class AbstractRomHandler implements RomHandler {
         }
     }
 
-    private void copyUpEvolutionsHelper(BasePokemonAction bpAction, EvolvedPokemonAction epAction) {
-        copyUpEvolutionsHelper(bpAction, epAction, null, false);
+    @Override
+    public void copyUpEvolutions(BasePokemonAction bpAction, EvolvedPokemonAction epAction) {
+        copyUpEvolutions(bpAction, epAction, null, false);
     }
 
     /* Helper methods used by subclasses and/or this class */
