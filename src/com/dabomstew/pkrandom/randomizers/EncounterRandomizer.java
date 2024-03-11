@@ -71,7 +71,7 @@ public class EncounterRandomizer {
             List<Pokemon> choiceList = new ArrayList<>();
             // We have more than we want
             if(possibleTranslations.size() > poolSize) {
-                // If we have a pool that's larger than our minimum, we need to pick only our minimum amount.
+                // If we have a pool that's larger than our limit, we need to pick only our maximum amount.
                 while (choiceList.size() < poolSize) {
                     int choiceIndex = random.nextInt(possibleTranslations.size());
                     choiceList.add(possibleTranslations.get(choiceIndex));
@@ -222,9 +222,10 @@ public class EncounterRandomizer {
                         while (usedAreaPokemon.contains(newPoke)) {
                             newPoke = options.get(random.nextInt(options.size()));
                         }
+
+                        usedAreaPokemon.add(newPoke);
                     }
 
-                    usedAreaPokemon.add(newPoke);
                     areaMappedPokemon.put(enc.pokemon, newPoke);
                     enc.pokemon = newPoke;
                     setFormeForEncounter(enc, enc.pokemon);
@@ -1212,10 +1213,11 @@ public class EncounterRandomizer {
         int maxSearchLoops = 3;
         for (int i = 0; similarPokemon.size() < minPool && i < maxSearchLoops; ++i) {
             for(Pokemon possiblePokemon: pickFromList) {
-                if(possiblePokemon.bstForPowerLevels() <= maxPowerLevel
+                if(!similarPokemon.contains(possiblePokemon)
+                        && possiblePokemon.bstForPowerLevels() <= maxPowerLevel
                         && possiblePokemon.bstForPowerLevels() >= minPowerLevel
                         && (pokemonType == null || possiblePokemon.primaryType == pokemonType
-                        || (possiblePokemon.secondaryType != null && possiblePokemon.secondaryType == pokemonType))) {
+                            || (possiblePokemon.secondaryType != null && possiblePokemon.secondaryType == pokemonType))) {
                     similarPokemon.add(possiblePokemon);
                 }
             }
