@@ -37,6 +37,7 @@ import com.dabomstew.pkrandom.romhandlers.RomHandler;
 import com.dabomstew.pkrandom.services.EncounterService;
 import com.dabomstew.pkrandom.services.PokemonEncounterRate;
 import com.dabomstew.pkrandom.services.PokemonService;
+import com.dabomstew.pkrandom.services.TypeService;
 
 // Can randomize a file based on settings. Output varies by seed.
 public class Randomizer {
@@ -105,6 +106,8 @@ public class Randomizer {
 
         PokemonService pokemonService = new PokemonService(random, romHandler, settings);
         pokemonService.checkPokemonRestrictions();
+
+        TypeService typeService = new TypeService(random, romHandler, settings);
 
         EncounterService encounterService = new EncounterService(random, romHandler, settings, pokemonService);
 
@@ -271,7 +274,7 @@ public class Randomizer {
             logUpdatedEvolutions(log, romHandler.getTimeBasedEvoUpdates(), null);
         }
 
-        StartersRandomizer startersRandomizer = new StartersRandomizer(random, settings, romHandler, pokemonService);
+        StartersRandomizer startersRandomizer = new StartersRandomizer(random, settings, romHandler, pokemonService, typeService);
         // Starter Pokemon
         // Applied after type to update the strings correctly based on new types
         switch(settings.getStartersMod()) {
@@ -280,11 +283,8 @@ public class Randomizer {
                 startersChanged = true;
                 break;
             case COMPLETELY_RANDOM:
-                startersRandomizer.randomizeStarters();
-                startersChanged = true;
-                break;
             case RANDOM_WITH_TWO_EVOLUTIONS:
-                startersRandomizer.randomizeBasicTwoEvosStarters();
+                startersRandomizer.randomizeStarters();
                 startersChanged = true;
                 break;
             default:

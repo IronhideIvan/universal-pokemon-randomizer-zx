@@ -1,5 +1,7 @@
 This is the IronhideIvan edit of the Universal Pokemon Randomizer ZX by Ajarmar.
 
+# README
+
 My primary goal is to add additional randomization options in order to randomize the games in a way
 that I would enjoy the most. I'm also breaking out the code into smaller chunks and refactoring things
 to make them easier to modify and work with (At least for me). I've appended the original readme to the bottom of my
@@ -30,18 +32,29 @@ where an encounter in the base game will try to be replaced with a pokemon that:
    1. Shares a type with the vanilla's primary type.
    2. Is of a similar power level.
 7. __Options for trades to only include rare pokemon__. In other words, trades will try to request pokemon that are difficult, but not impossible,
-to obtain in the wild. At the same time, trades will offer pokemon that are rare or unobtainable in the wild. This makes trades a the opportunity to be a 
+to obtain in the wild. At the same time, trades will offer pokemon that are rare or unobtainable in the wild. This gives trades the opportunity to be a 
 bit more fun and worthwhile to pursue.
 8. __Starter types are unique from one another__. No two starters will share the same type at the time of the choice. I think this is
 more in the spirit of the OG games and will give the player more variety at the start of the game.
 9. __Option to give Pikachu Surf__. This is an, admittedly, silly and niche addition. Surfing pikachu has regularly been an
 event-only exclusive prior to Gen 8, and I wanted to bring that into the earlier generations if possible.
+10. __Option to force starters into a type triangle.__ When randomizing starters you are given the option to choose
+whether you want the starters to be placed in a type triangle. For the sake of flexibility, I've added 3 levels of restrictiveness
+in regards to what type combinations are available. The type triangles are:
+    1. _Weak:_ Not including itself, each type in the triange is super effective to exactly one other type in the triangle.
+It is also weak to the type it is not super effective against.
+    2. _Strong:_ Same as "Weak". Additionally, each type resists the type it is super effective against.
+    3. _Perfect:_ Same as "Strong" and "Weak". Additionally, each type also resists itself. (In the vanilla games, this 
+option really only includes GRASS, FIRE, WATER as a type combination.)
+11. __Option to force starters to be each be single type.__ In other words, if this option is turned on, then pokemon like
+GHASTLY won't be possible as starters because they have a secondary type (POISON). This was an option I added while testing my 
+type triangle changes, and felt it meshed well with the existing starter options so I decided to turn it into a feature.
+12. __Alphabetize custom starter selection.__ Pokemon should now be in alphabetical order when selecting custom starters.
+They were in numerical order before, and I don't know what number each pokemon is by heart.
 
 ## Randomizer Goals
 These are things I might want to add in the future or are things that I think would be fun.
-1. Force starters into a type triangle. Having an option to have a type triangle would be fun. I know that there are a tiny number
-of true type triangles (Wherein TYPE A attacks are strong to B pokemon, but weak to C pokemon's type attacks.), so having an additional
-option of whether a user wants a true-type or weak-type triangle would be good.
+1. Currently, I don't have any other feature additions planned. Will update this section if that changes.
 
 ## Refactoring Goals
 I don't like that most of the randomization logic sits in a monolithic `RomHandler` implementation. My ideal scenario

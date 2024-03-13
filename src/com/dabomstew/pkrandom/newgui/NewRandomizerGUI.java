@@ -43,9 +43,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
 import java.text.Collator;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -301,7 +299,6 @@ public class NewRandomizerGUI {
     private JCheckBox paEnsureTwoAbilitiesCheckbox;
     private JCheckBox miscUpdateRotomFormeTypingCheckBox;
     private JCheckBox miscDisableLowHPMusicCheckBox;
-    private JCheckBox spForceUniqueStarterTypesCheckBox;
     private JCheckBox tpGiveUberTrainersOnlyLegendariesCheckBox;
     private JCheckBox wpNoStartersInWildCheckBox;
     private JCheckBox wpNoWildStaticPokemonCheckBox;
@@ -313,6 +310,12 @@ public class NewRandomizerGUI {
     private JCheckBox igtRequestRarePokemonCheckBox;
     private JCheckBox igtNoStartersCheckBox;
     private JCheckBox tmPikachuCanLearnSurfCheckBox;
+    private JRadioButton spRestrictionsUnchangedRadioButton;
+    private JRadioButton spRestrictionsUniqueTypesRadioButton;
+    private JRadioButton spRestrictionsWeakTriangleRadioButton;
+    private JRadioButton spRestrictionsStrongTriangleRadioButton;
+    private JRadioButton spRestrictionsPerfectTriangleRadioButton;
+    private JCheckBox spRestrictionsForceMonotypeCheckbox;
 
     private static JFrame frame;
 
@@ -1523,7 +1526,13 @@ public class NewRandomizerGUI {
         spRandomizeStarterHeldItemsCheckBox.setSelected(settings.isRandomizeStartersHeldItems());
         spBanBadItemsCheckBox.setSelected(settings.isBanBadRandomStarterHeldItems());
         spAllowAltFormesCheckBox.setSelected(settings.isAllowStarterAltFormes());
-        spForceUniqueStarterTypesCheckBox.setSelected(settings.isForceUniqueStarterTypes());
+
+        spRestrictionsUnchangedRadioButton.setSelected(settings.getStarterTypeRestrictions() == Settings.StarterTypeRestrictions.UNCHANGED);
+        spRestrictionsUniqueTypesRadioButton.setSelected(settings.getStarterTypeRestrictions() == Settings.StarterTypeRestrictions.UNIQUE_TYPES);
+        spRestrictionsWeakTriangleRadioButton.setSelected(settings.getStarterTypeRestrictions() == Settings.StarterTypeRestrictions.WEAK_TRIANGLE);
+        spRestrictionsStrongTriangleRadioButton.setSelected(settings.getStarterTypeRestrictions() == Settings.StarterTypeRestrictions.STRONG_TRIANGLE);
+        spRestrictionsPerfectTriangleRadioButton.setSelected(settings.getStarterTypeRestrictions() == Settings.StarterTypeRestrictions.PERFECT_TRIANGLE);
+        spRestrictionsForceMonotypeCheckbox.setSelected(settings.isForceMonotypeStarters());
 
         int[] customStarters = settings.getCustomStarters();
         spComboBox1.setSelectedIndex(customStarters[0] - 1);
@@ -1777,7 +1786,16 @@ public class NewRandomizerGUI {
         settings.setRandomizeStartersHeldItems(spRandomizeStarterHeldItemsCheckBox.isSelected() && spRandomizeStarterHeldItemsCheckBox.isVisible());
         settings.setBanBadRandomStarterHeldItems(spBanBadItemsCheckBox.isSelected() && spBanBadItemsCheckBox.isVisible());
         settings.setAllowStarterAltFormes(spAllowAltFormesCheckBox.isSelected() && spAllowAltFormesCheckBox.isVisible());
-        settings.setForceUniqueStarterTypes(spForceUniqueStarterTypesCheckBox.isSelected() && spForceUniqueStarterTypesCheckBox.isVisible());
+
+        settings.setStarterTypeRestrictions(
+                spRestrictionsUniqueTypesRadioButton.isSelected() ? Settings.StarterTypeRestrictions.UNIQUE_TYPES
+                        : spRestrictionsWeakTriangleRadioButton.isSelected() ? Settings.StarterTypeRestrictions.WEAK_TRIANGLE
+                        : spRestrictionsStrongTriangleRadioButton.isSelected() ? Settings.StarterTypeRestrictions.STRONG_TRIANGLE
+                        : spRestrictionsPerfectTriangleRadioButton.isSelected() ? Settings.StarterTypeRestrictions.PERFECT_TRIANGLE
+                        : Settings.StarterTypeRestrictions.UNCHANGED
+        );
+
+        settings.setForceMonotypeStarters(spRestrictionsForceMonotypeCheckbox.isSelected());
 
         int[] customStarters = new int[] { spComboBox1.getSelectedIndex() + 1,
                 spComboBox2.getSelectedIndex() + 1, spComboBox3.getSelectedIndex() + 1 };
@@ -2199,6 +2217,24 @@ public class NewRandomizerGUI {
         spRandomTwoEvosRadioButton.setVisible(true);
         spRandomTwoEvosRadioButton.setEnabled(false);
         spRandomTwoEvosRadioButton.setSelected(false);
+        spRestrictionsUnchangedRadioButton.setVisible(true);
+        spRestrictionsUnchangedRadioButton.setEnabled(false);
+        spRestrictionsUnchangedRadioButton.setSelected(false);
+        spRestrictionsUniqueTypesRadioButton.setVisible(true);
+        spRestrictionsUniqueTypesRadioButton.setEnabled(false);
+        spRestrictionsUniqueTypesRadioButton.setSelected(false);
+        spRestrictionsWeakTriangleRadioButton.setVisible(true);
+        spRestrictionsWeakTriangleRadioButton.setEnabled(false);
+        spRestrictionsWeakTriangleRadioButton.setSelected(false);
+        spRestrictionsStrongTriangleRadioButton.setVisible(true);
+        spRestrictionsStrongTriangleRadioButton.setEnabled(false);
+        spRestrictionsStrongTriangleRadioButton.setSelected(false);
+        spRestrictionsPerfectTriangleRadioButton.setVisible(true);
+        spRestrictionsPerfectTriangleRadioButton.setEnabled(false);
+        spRestrictionsPerfectTriangleRadioButton.setSelected(false);
+        spRestrictionsForceMonotypeCheckbox.setVisible(true);
+        spRestrictionsForceMonotypeCheckbox.setEnabled(false);
+        spRestrictionsForceMonotypeCheckbox.setSelected(false);
         spComboBox1.setVisible(true);
         spComboBox1.setEnabled(false);
         spComboBox1.setSelectedIndex(0);
@@ -2220,9 +2256,6 @@ public class NewRandomizerGUI {
         spAllowAltFormesCheckBox.setVisible(true);
         spAllowAltFormesCheckBox.setEnabled(false);
         spAllowAltFormesCheckBox.setSelected(false);
-        spForceUniqueStarterTypesCheckBox.setVisible(true);
-        spForceUniqueStarterTypesCheckBox.setEnabled(false);
-        spForceUniqueStarterTypesCheckBox.setSelected(false);
         stpUnchangedRadioButton.setVisible(true);
         stpUnchangedRadioButton.setEnabled(false);
         stpUnchangedRadioButton.setSelected(false);
@@ -2836,6 +2869,19 @@ public class NewRandomizerGUI {
             }
             populateDropdowns();
 
+            spRestrictionsUnchangedRadioButton.setEnabled(false);
+            spRestrictionsUniqueTypesRadioButton.setEnabled(false);
+            spRestrictionsWeakTriangleRadioButton.setEnabled(false);
+            spRestrictionsStrongTriangleRadioButton.setEnabled(false);
+            spRestrictionsPerfectTriangleRadioButton.setEnabled(false);
+            spRestrictionsForceMonotypeCheckbox.setEnabled(false);
+            spRestrictionsUnchangedRadioButton.setSelected(true);
+            spRestrictionsUniqueTypesRadioButton.setSelected(false);
+            spRestrictionsWeakTriangleRadioButton.setSelected(false);
+            spRestrictionsStrongTriangleRadioButton.setSelected(false);
+            spRestrictionsPerfectTriangleRadioButton.setSelected(false);
+            spRestrictionsForceMonotypeCheckbox.setSelected(false);
+
             boolean supportsStarterHeldItems = romHandler.supportsStarterHeldItems();
             spRandomizeStarterHeldItemsCheckBox.setEnabled(supportsStarterHeldItems);
             spRandomizeStarterHeldItemsCheckBox.setVisible(supportsStarterHeldItems);
@@ -3327,10 +3373,26 @@ public class NewRandomizerGUI {
         }
 
         if(spRandomCompletelyRadioButton.isSelected() || spRandomTwoEvosRadioButton.isSelected()){
-            spForceUniqueStarterTypesCheckBox.setEnabled(true);
+            spRestrictionsUnchangedRadioButton.setEnabled(true);
+            spRestrictionsUniqueTypesRadioButton.setEnabled(true);
+            spRestrictionsWeakTriangleRadioButton.setEnabled(true);
+            spRestrictionsStrongTriangleRadioButton.setEnabled(true);
+            spRestrictionsPerfectTriangleRadioButton.setEnabled(true);
+            spRestrictionsForceMonotypeCheckbox.setEnabled(true);
         } else {
-            spForceUniqueStarterTypesCheckBox.setEnabled(false);
-            spForceUniqueStarterTypesCheckBox.setSelected(false);
+            spRestrictionsUnchangedRadioButton.setEnabled(false);
+            spRestrictionsUniqueTypesRadioButton.setEnabled(false);
+            spRestrictionsWeakTriangleRadioButton.setEnabled(false);
+            spRestrictionsStrongTriangleRadioButton.setEnabled(false);
+            spRestrictionsPerfectTriangleRadioButton.setEnabled(false);
+            spRestrictionsForceMonotypeCheckbox.setEnabled(false);
+
+            spRestrictionsUnchangedRadioButton.setSelected(true);
+            spRestrictionsUniqueTypesRadioButton.setSelected(false);
+            spRestrictionsWeakTriangleRadioButton.setSelected(false);
+            spRestrictionsStrongTriangleRadioButton.setSelected(false);
+            spRestrictionsPerfectTriangleRadioButton.setSelected(false);
+            spRestrictionsForceMonotypeCheckbox.setSelected(false);
         }
 
         if (spRandomizeStarterHeldItemsCheckBox.isSelected()) {

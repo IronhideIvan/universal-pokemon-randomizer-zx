@@ -66,14 +66,7 @@ public enum Effectiveness {
     }
 
     public static List<Type> notVeryEffective(Type attackingType, int generation, boolean effectivenessUpdated) {
-        Effectiveness[][] effectivenesses;
-        if (generation == 1) {
-            effectivenesses = effectivenessUpdated ? gen2Through5Table : gen1Table;
-        } else if (generation >= 2 && generation <= 5) {
-            effectivenesses = effectivenessUpdated ? gen6PlusTable : gen2Through5Table;
-        } else {
-            effectivenesses = gen6PlusTable;
-        }
+        Effectiveness[][] effectivenesses = getEffectivenesses(generation, effectivenessUpdated);
         List<Type> allTypes = Type.getAllTypes(generation);
 
         return allTypes
@@ -85,14 +78,7 @@ public enum Effectiveness {
     }
 
     public static List<Type> superEffective(Type attackingType, int generation, boolean effectivenessUpdated) {
-        Effectiveness[][] effectivenesses;
-        if (generation == 1) {
-            effectivenesses = effectivenessUpdated ? gen2Through5Table : gen1Table;
-        } else if (generation >= 2 && generation <= 5) {
-            effectivenesses = effectivenessUpdated ? gen6PlusTable : gen2Through5Table;
-        } else {
-            effectivenesses = gen6PlusTable;
-        }
+        Effectiveness[][] effectivenesses = getEffectivenesses(generation, effectivenessUpdated);
         List<Type> allTypes = Type.getAllTypes(generation);
 
         return allTypes
@@ -100,6 +86,22 @@ public enum Effectiveness {
                 .filter(defendingType ->
                         effectivenesses[attackingType.ordinal()][defendingType.ordinal()] == Effectiveness.DOUBLE)
                 .collect(Collectors.toList());
+    }
+
+    public static Effectiveness effectiveness(Type attackingType, Type defendingType, int generation, boolean effectivenessUpdated) {
+        Effectiveness[][] effectivenesses = getEffectivenesses(generation, effectivenessUpdated);
+
+        return effectivenesses[attackingType.ordinal()][defendingType.ordinal()];
+    }
+
+    private static Effectiveness[][] getEffectivenesses(int generation, boolean effectivenessUpdated) {
+        if (generation == 1) {
+            return effectivenessUpdated ? gen2Through5Table : gen1Table;
+        } else if (generation >= 2 && generation <= 5) {
+            return effectivenessUpdated ? gen6PlusTable : gen2Through5Table;
+        } else {
+            return gen6PlusTable;
+        }
     }
 
     // Attacking type is the row, Defending type is the column. This corresponds to the ordinal of types.

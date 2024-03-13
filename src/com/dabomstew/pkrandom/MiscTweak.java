@@ -89,6 +89,10 @@ public class MiscTweak implements Comparable<MiscTweak> {
         return tooltipText;
     }
 
+    public boolean isMiscTweakSet(int tweaks) {
+        return (tweaks & this.getValue()) > 0;
+    }
+
     @Override
     public int compareTo(MiscTweak o) {
         // Order according to reverse priority, so higher priority = earlier in

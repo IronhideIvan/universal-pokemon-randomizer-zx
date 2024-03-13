@@ -358,4 +358,8 @@ public class Pokemon implements Comparable<Pokemon> {
         return false;
     }
 
+    public boolean hasType(Type type) {
+        return this.primaryType == type || (this.secondaryType != null && this.secondaryType == type);
+    }
+
 }

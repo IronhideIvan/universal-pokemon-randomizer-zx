@@ -106,7 +106,13 @@ public class Settings {
     private StartersMod startersMod = StartersMod.UNCHANGED;
     private boolean allowStarterAltFormes;
 
-    private boolean forceUniqueStarterTypes;
+    public enum StarterTypeRestrictions {
+        UNCHANGED, UNIQUE_TYPES, WEAK_TRIANGLE, STRONG_TRIANGLE, PERFECT_TRIANGLE
+    }
+
+    private StarterTypeRestrictions starterTypeRestrictions = StarterTypeRestrictions.UNCHANGED;
+
+    private boolean forceMonotypeStarters;
 
     // index in the rom's list of pokemon
     // offset from the dropdown index from RandomizerGUI by 1
@@ -398,7 +404,7 @@ public class Settings {
         // 4: starter pokemon stuff
         out.write(makeByteSelected(startersMod == StartersMod.CUSTOM, startersMod == StartersMod.COMPLETELY_RANDOM,
                 startersMod == StartersMod.UNCHANGED, startersMod == StartersMod.RANDOM_WITH_TWO_EVOLUTIONS,
-                randomizeStartersHeldItems, banBadRandomStarterHeldItems, allowStarterAltFormes, forceUniqueStarterTypes));
+                randomizeStartersHeldItems, banBadRandomStarterHeldItems, allowStarterAltFormes));
 
         // 5 - 10: dropdowns
         write2ByteInt(out, customStarters[0] - 1);
@@ -610,6 +616,16 @@ public class Settings {
                 rareRequestInGameTrades,
                 noStartersInGameTrades));
 
+        // 54 Starter Type Restrictions
+        out.write(makeByteSelected(
+                starterTypeRestrictions == StarterTypeRestrictions.UNCHANGED, // 0
+                starterTypeRestrictions == StarterTypeRestrictions.UNIQUE_TYPES, // 1
+                starterTypeRestrictions == StarterTypeRestrictions.WEAK_TRIANGLE, // 2
+                starterTypeRestrictions == StarterTypeRestrictions.STRONG_TRIANGLE, // 3
+                starterTypeRestrictions == StarterTypeRestrictions.PERFECT_TRIANGLE, // 4
+                forceMonotypeStarters
+        ));
+
         try {
             byte[] romName = this.romName.getBytes("US-ASCII");
             out.write(romName.length);
@@ -681,10 +697,20 @@ public class Settings {
                 1, // COMPLETELY_RANDOM
                 3 // RANDOM_WITH_TWO_EVOLUTIONS
         ));
+
+        settings.setStarterTypeRestrictions(restoreEnum(StarterTypeRestrictions.class, data[54],
+                0, // UNCHANGED
+                1, // UNIQUE_TYPES
+                2, // WEAK_TRIANGLE
+                3, // STRONG_TRIANGLE
+                4 // PERFECT_TRIANGLE
+        ));
+
+        settings.setForceMonotypeStarters(restoreState(data[54], 5));
+
         settings.setRandomizeStartersHeldItems(restoreState(data[4], 4));
         settings.setBanBadRandomStarterHeldItems(restoreState(data[4], 5));
         settings.setAllowStarterAltFormes(restoreState(data[4],6));
-        settings.setForceUniqueStarterTypes(restoreState(data[4],7));
 
         settings.setCustomStarters(new int[] { FileFunctions.read2ByteInt(data, 5) + 1,
                 FileFunctions.read2ByteInt(data, 7) + 1, FileFunctions.read2ByteInt(data, 9) + 1 });
@@ -1397,16 +1423,6 @@ public class Settings {
     public void setAllowStarterAltFormes(boolean allowStarterAltFormes) {
         this.allowStarterAltFormes = allowStarterAltFormes;
     }
-
-    public boolean isForceUniqueStarterTypes() {
-        return forceUniqueStarterTypes;
-    }
-
-    public void setForceUniqueStarterTypes(boolean forceUniqueStarterTypes) {
-        this.forceUniqueStarterTypes = forceUniqueStarterTypes;
-    }
-
-    
     public TypesMod getTypesMod() {
         return typesMod;
     }
@@ -2427,6 +2443,22 @@ public class Settings {
 
     public void setTmPikachuCanLearnSurf(boolean tmPikachuCanLearnSurf) {
         this.tmPikachuCanLearnSurf = tmPikachuCanLearnSurf;
+    }
+
+    public StarterTypeRestrictions getStarterTypeRestrictions() {
+        return starterTypeRestrictions;
+    }
+
+    public void setStarterTypeRestrictions(StarterTypeRestrictions starterTypeRestrictions) {
+        this.starterTypeRestrictions = starterTypeRestrictions;
+    }
+
+    public boolean isForceMonotypeStarters() {
+        return forceMonotypeStarters;
+    }
+
+    public void setForceMonotypeStarters(boolean forceMonotypeStarters) {
+        this.forceMonotypeStarters = forceMonotypeStarters;
     }
 
     private static int makeByteSelected(boolean... bools) {

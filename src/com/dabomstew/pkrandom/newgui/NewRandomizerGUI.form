@@ -791,7 +791,7 @@
                   </hspacer>
                   <vspacer id="499d4">
                     <constraints>
-                      <grid row="5" column="1" row-span="1" col-span="2" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                      <grid row="6" column="1" row-span="1" col-span="2" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                       <gridbag weightx="0.0" weighty="0.0"/>
                     </constraints>
                   </vspacer>
@@ -827,17 +827,6 @@
                       <enabled value="false"/>
                       <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRandomCompletelyRadioButton.text"/>
                       <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRandomCompletelyRadioButton.toolTipText"/>
-                    </properties>
-                  </component>
-                  <component id="12184" class="javax.swing.JRadioButton" binding="spRandomTwoEvosRadioButton">
-                    <constraints>
-                      <grid row="4" column="1" row-span="1" col-span="4" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                      <gridbag weightx="0.0" weighty="0.0"/>
-                    </constraints>
-                    <properties>
-                      <enabled value="false"/>
-                      <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRandomTwoEvosRadioButton.text"/>
-                      <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRandomTwoEvosRadioButton.toolTipText"/>
                     </properties>
                   </component>
                   <component id="83a64" class="javax.swing.JComboBox" binding="spComboBox1">
@@ -898,6 +887,93 @@
                       <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spBanBadItemsCheckBox.toolTipText"/>
                     </properties>
                   </component>
+                  <grid id="b4d99" layout-manager="GridLayoutManager" row-count="5" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                    <margin top="0" left="0" bottom="0" right="0"/>
+                    <constraints>
+                      <grid row="2" column="6" row-span="4" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                      <gridbag weightx="0.0" weighty="0.0"/>
+                    </constraints>
+                    <properties/>
+                    <border type="none" title="Starter Type Restrictions"/>
+                    <children>
+                      <component id="7062d" class="javax.swing.JRadioButton" binding="spRestrictionsUnchangedRadioButton">
+                        <constraints>
+                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <enabled value="false"/>
+                          <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRestrictionsUnchangedRadioButton.text"/>
+                          <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRestrictionsUnchangedRadioButton.toolTipText"/>
+                        </properties>
+                      </component>
+                      <hspacer id="1c015">
+                        <constraints>
+                          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                      </hspacer>
+                      <component id="fde7" class="javax.swing.JRadioButton" binding="spRestrictionsUniqueTypesRadioButton">
+                        <constraints>
+                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <enabled value="false"/>
+                          <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRestrictionsUniqueTypesRadioButton.text"/>
+                          <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRestrictionsUniqueTypesRadioButton.toolTipText"/>
+                        </properties>
+                      </component>
+                      <component id="c1bc5" class="javax.swing.JRadioButton" binding="spRestrictionsWeakTriangleRadioButton">
+                        <constraints>
+                          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <enabled value="false"/>
+                          <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRestrictionsWeakTriangleRadioButton.text"/>
+                          <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRestrictionsWeakTriangleRadioButton.toolTipText"/>
+                        </properties>
+                      </component>
+                      <component id="d233a" class="javax.swing.JRadioButton" binding="spRestrictionsStrongTriangleRadioButton">
+                        <constraints>
+                          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <enabled value="false"/>
+                          <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRestrictionsTrueTriangleRadioButton.text"/>
+                          <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRestrictionsWeakTriangleRadioButton.toolTipText"/>
+                        </properties>
+                      </component>
+                      <component id="3c069" class="javax.swing.JRadioButton" binding="spRestrictionsPerfectTriangleRadioButton">
+                        <constraints>
+                          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <enabled value="false"/>
+                          <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRestrictionsStrongTriangleRadioButton.text"/>
+                          <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRestrictionsWeakTriangleRadioButton.toolTipText"/>
+                        </properties>
+                      </component>
+                      <component id="44329" class="javax.swing.JCheckBox" binding="spRestrictionsForceMonotypeCheckbox">
+                        <constraints>
+                          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <enabled value="false"/>
+                          <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRestrictionsForceMonotypeCheckbox.text"/>
+                          <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRestrictionsForceMonotypeCheckbox.toolTipText"/>
+                        </properties>
+                      </component>
+                    </children>
+                  </grid>
+                  <component id="12184" class="javax.swing.JRadioButton" binding="spRandomTwoEvosRadioButton">
+                    <constraints>
+                      <grid row="4" column="1" row-span="1" col-span="4" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                      <gridbag weightx="0.0" weighty="0.0"/>
+                    </constraints>
+                    <properties>
+                      <enabled value="false"/>
+                      <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRandomTwoEvosRadioButton.text"/>
+                      <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spRandomTwoEvosRadioButton.toolTipText"/>
+                    </properties>
+                  </component>
                   <component id="cad77" class="javax.swing.JCheckBox" binding="spAllowAltFormesCheckBox">
                     <constraints>
                       <grid row="4" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
@@ -907,17 +983,6 @@
                       <enabled value="false"/>
                       <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spAllowAltFormesCheckBox.text"/>
                       <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spAllowAltFormesCheckBox.toolTipText"/>
-                    </properties>
-                  </component>
-                  <component id="1b5ac" class="javax.swing.JCheckBox" binding="spForceUniqueStarterTypesCheckBox">
-                    <constraints>
-                      <grid row="4" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                      <gridbag weightx="0.0" weighty="0.0"/>
-                    </constraints>
-                    <properties>
-                      <enabled value="false"/>
-                      <text resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spForceUniqueStarterTypesCheckBox.text"/>
-                      <toolTipText resource-bundle="com/dabomstew/pkrandom/newgui/Bundle" key="GUI.spForceUniqueStarterTypesCheckBox.toolTipText"/>
                     </properties>
                   </component>
                 </children>
@@ -4046,6 +4111,13 @@
     <group name="pickupItemButtonGroup">
       <member id="62bb6"/>
       <member id="478a"/>
+    </group>
+    <group name="starterTypeRestrictionsButtonGroup">
+      <member id="7062d"/>
+      <member id="fde7"/>
+      <member id="c1bc5"/>
+      <member id="d233a"/>
+      <member id="3c069"/>
     </group>
   </buttonGroups>
   <inspectionSuppressions>
