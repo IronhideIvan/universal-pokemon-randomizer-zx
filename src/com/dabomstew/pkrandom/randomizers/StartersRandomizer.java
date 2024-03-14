@@ -113,21 +113,19 @@ public class StartersRandomizer {
         // Initialize our type triangle, if we are using one.
         TypeTriangle typeTriangle = null;
         List<Type> typeTriangleList = null;
+        Settings.StarterTypeRestrictions restrictions = settings.getStarterTypeRestrictions();
         if(starterCount == 3) {
-            if(settings.getStarterTypeRestrictions() == Settings.StarterTypeRestrictions.STRONG_TRIANGLE
-                || settings.getStarterTypeRestrictions() == Settings.StarterTypeRestrictions.WEAK_TRIANGLE
-                || settings.getStarterTypeRestrictions() == Settings.StarterTypeRestrictions.PERFECT_TRIANGLE) {
+            if(restrictions == Settings.StarterTypeRestrictions.STRONG_TRIANGLE
+                || restrictions == Settings.StarterTypeRestrictions.WEAK_TRIANGLE
+                || restrictions == Settings.StarterTypeRestrictions.PERFECT_TRIANGLE) {
 
-                int index = 0;
-                do {
-                    typeTriangle = getRandomTypeTriangle(settings.getStarterTypeRestrictions());
+                typeTriangle = getRandomTypeTriangle(restrictions, optionList);
+                if(typeTriangle != null) {
                     typeTriangleList = typeTriangle.asList();
-                    ++index;
                 }
-                while(!isPokemonForTypeTriangleExist(typeTriangle, optionList) && index < 3);
-
-                if(index == 3) {
-                    throw new RandomizationException("Unable to find pokemon for type triangle: " + typeTriangle.toString());
+                else {
+                    // Default to unique types if a Type Triangle doesn't exist.
+                    restrictions = Settings.StarterTypeRestrictions.UNIQUE_TYPES;
                 }
             }
         }
@@ -144,7 +142,7 @@ public class StartersRandomizer {
 
             while (pickedStarters.contains(pkmn)
                     || pkmn.actuallyCosmetic
-                    || (settings.getStarterTypeRestrictions() == Settings.StarterTypeRestrictions.UNIQUE_TYPES && pkmn.sharesAnyTypes(pickedStarters))
+                    || (restrictions == Settings.StarterTypeRestrictions.UNIQUE_TYPES && pkmn.sharesAnyTypes(pickedStarters))
                     || (triangleType != null && !typeTriangle.doesPokemonMatchOnlyOneType(pkmn))) {
 
                 pkmn = getRandomStarter(optionList, triangleType);
@@ -156,27 +154,6 @@ public class StartersRandomizer {
 
     public List<Pokemon> getPickedStarters() {
         return pickedStarters;
-    }
-
-    private boolean isPokemonForTypeTriangleExist(TypeTriangle typeTriangle, List<Pokemon> pokemonList) {
-        List<Type> typeTriangleList = typeTriangle.asList();
-
-        for(Type triangleType: typeTriangleList) {
-            boolean isExist = false;
-
-            for(Pokemon poke: pokemonList) {
-                if(poke.hasType(triangleType)) {
-                    isExist = true;
-                    break;
-                }
-            }
-
-            if(!isExist) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private Pokemon getRandomStarter(List<Pokemon> optionList, Type t) {
@@ -258,8 +235,12 @@ public class StartersRandomizer {
         return twoEvoPokes;
     }
 
-    private TypeTriangle getRandomTypeTriangle(Settings.StarterTypeRestrictions restrictions) {
-        List<TypeTriangle> allTypeTriangles = getAllTypeTriangles();
+    private TypeTriangle getRandomTypeTriangle(Settings.StarterTypeRestrictions restrictions, List<Pokemon> optionList) {
+        List<TypeTriangle> allTypeTriangles = getAllTypeTriangles(optionList);
+
+        if(allTypeTriangles.isEmpty()) {
+            return null;
+        }
 
         if(restrictions == Settings.StarterTypeRestrictions.WEAK_TRIANGLE) {
             return allTypeTriangles.get(random.nextInt(allTypeTriangles.size()));
@@ -312,20 +293,32 @@ public class StartersRandomizer {
         return ret;
     }
 
-    private List<TypeTriangle> getAllTypeTriangles() {
-        List<Type> typesInGame = typeService.getAllTypesInGame();
+    private List<TypeTriangle> getAllTypeTriangles(List<Pokemon> optionList) {
+        Set<Type> typesInGameSet = new TreeSet<>();
+
+        if(optionList == null) {
+            typesInGameSet = new TreeSet<>(typeService.getAllTypesInGame());
+        }
+        else {
+            for(Pokemon poke: optionList) {
+                typesInGameSet.add(poke.primaryType);
+                if(poke.secondaryType != null) {
+                    typesInGameSet.add(poke.secondaryType);
+                }
+            }
+        }
 
         // For each type in the game, try to find three types that have a circular
         // relationship of super-effectiveness with each other. I.E. Type A is effective against
         // Type B, Type B is effective against Type C, and Type C is effective against Type A.
         List<TypeTriangle> typeTriangleList = new ArrayList<>();
-        for (Type typeA: typesInGame) {
+        for (Type typeA: typesInGameSet) {
 
             List<Type> typeASuperEffectiveList = typeService.getSuperEffectiveTypes(typeA);
             for (Type typeB: typeASuperEffectiveList) {
 
                 // Each type must be distinct
-                if(typeB == typeA) {
+                if(typeB == typeA || !typesInGameSet.contains(typeB)) {
                     continue;
                 }
 
@@ -333,7 +326,7 @@ public class StartersRandomizer {
                 for(Type typeC: typeBSuperEffectiveList) {
 
                     // Each type must be distinct
-                    if(typeC == typeB || typeC == typeA) {
+                    if(typeC == typeB || typeC == typeA || !typesInGameSet.contains(typeC)) {
                         continue;
                     }
 
