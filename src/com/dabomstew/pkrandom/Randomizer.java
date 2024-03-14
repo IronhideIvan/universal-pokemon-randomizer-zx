@@ -769,15 +769,16 @@ public class Randomizer {
     private void logTrades(PrintStream log, List<IngameTrade> oldTrades) {
         log.println("--In-Game Trades--");
         List<IngameTrade> newTrades = romHandler.getIngameTrades();
+        String[] itemNames = romHandler.getItemNames();
         int size = oldTrades.size();
         for (int i = 0; i < size; i++) {
             IngameTrade oldT = oldTrades.get(i);
             IngameTrade newT = newTrades.get(i);
             log.printf("Trade %-11s -> %-11s the %-11s [ITEM=%s]        ->      %-11s -> %-15s the %s [ITEM=%s]" + NEWLINE,
                     oldT.requestedPokemon != null ? oldT.requestedPokemon.fullName() : "Any",
-                    oldT.nickname, oldT.givenPokemon.fullName(), oldT.item,
+                    oldT.nickname, oldT.givenPokemon.fullName(), itemNames[oldT.item],
                     newT.requestedPokemon != null ? newT.requestedPokemon.fullName() : "Any",
-                    newT.nickname, newT.givenPokemon.fullName(), newT.item);
+                    newT.nickname, newT.givenPokemon.fullName(), itemNames[newT.item]);
         }
         log.println();
     }
