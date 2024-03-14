@@ -62,7 +62,7 @@ public class EncounterRandomizer {
         List<Pokemon> allPokemon = pokemonService.getAllPokemonInclFormesWithoutNull();
 
         // The min pool may be configurable, but for now lets leave it in the code.
-        int poolSize = 5;
+        int poolSize = 3;
         for(Pokemon ogPoke: allPokemon) {
             // Find all pokemon with a similar level and type as this one.
             int ogPowerLevel = ogPoke.bstForPowerLevels();
