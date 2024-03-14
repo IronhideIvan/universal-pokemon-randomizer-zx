@@ -1103,12 +1103,29 @@ public class Randomizer {
                 break;
             case COMPLETELY_RANDOM:
                 log.println("--Random Starters--");
+                log.println("Force Monotype Starters: " + settings.isForceMonotypeStarters());
                 break;
             case RANDOM_WITH_TWO_EVOLUTIONS:
                 log.println("--Random 2-Evolution Starters--");
+                log.println("Force Monotype Starters: " + settings.isForceMonotypeStarters());
                 break;
             default:
                 break;
+        }
+
+        if(settings.getStarterTypeRestrictions() != Settings.StarterTypeRestrictions.UNCHANGED) {
+            log.println("Starter Type Restrictions Selected: " + settings.getStarterTypeRestrictions().toString());
+
+            if(settings.getStarterTypeRestrictions() != startersRandomizer.getRestrictionsLog()) {
+                log.println("*** Unable to generate starters using restrictions:" + settings.getStarterTypeRestrictions());
+                log.println("*** Used fallback restriction of:" + startersRandomizer.getRestrictionsLog());
+            }
+
+            if(startersRandomizer.getTypeTriangleLog() != null) {
+                log.println("Used type triangle: " + startersRandomizer.getTypeTriangleLog().toString());
+            }
+
+            log.println();
         }
 
         List<Pokemon> starters = startersRandomizer.getPickedStarters();

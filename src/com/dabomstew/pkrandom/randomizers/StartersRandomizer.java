@@ -21,7 +21,10 @@ public class StartersRandomizer {
     private final Settings settings;
     private final TypeService typeService;
 
+    // Private variables for logging purposes.
     private List<Pokemon> pickedStarters;
+    private TypeTriangle typeTriangleLog;
+    private Settings.StarterTypeRestrictions restrictionsLog;
 
     public StartersRandomizer(Random random, Settings settings, RomHandler romHandler, PokemonService pokemonService, TypeService typeService) {
         this.random = random;
@@ -106,14 +109,16 @@ public class StartersRandomizer {
 
         pickedStarters = new ArrayList<>();
         int starterCount = romHandler.starterCount();
-
         // Get our list of available starters
         List<Pokemon> optionList = getStarterOptionsList();
 
         // Initialize our type triangle, if we are using one.
         TypeTriangle typeTriangle = null;
         List<Type> typeTriangleList = null;
+
         Settings.StarterTypeRestrictions restrictions = settings.getStarterTypeRestrictions();
+        // Used purely for logging.
+        restrictionsLog = restrictions;
         if(starterCount == 3) {
             if(restrictions == Settings.StarterTypeRestrictions.STRONG_TRIANGLE
                 || restrictions == Settings.StarterTypeRestrictions.WEAK_TRIANGLE
@@ -125,7 +130,7 @@ public class StartersRandomizer {
                 }
                 else {
                     // Default to unique types if a Type Triangle doesn't exist.
-                    restrictions = Settings.StarterTypeRestrictions.UNIQUE_TYPES;
+                    restrictionsLog = restrictions = Settings.StarterTypeRestrictions.UNIQUE_TYPES;
                 }
             }
         }
@@ -149,11 +154,23 @@ public class StartersRandomizer {
             }
             pickedStarters.add(pkmn);
         }
+
         romHandler.setStarters(pickedStarters);
+
+        // These variables are purely for logging purposes
+        typeTriangleLog = typeTriangle;
     }
 
     public List<Pokemon> getPickedStarters() {
         return pickedStarters;
+    }
+
+    public TypeTriangle getTypeTriangleLog() {
+        return typeTriangleLog;
+    }
+
+    public Settings.StarterTypeRestrictions getRestrictionsLog() {
+        return restrictionsLog;
     }
 
     private Pokemon getRandomStarter(List<Pokemon> optionList, Type t) {
@@ -287,6 +304,7 @@ public class StartersRandomizer {
             ret = trueTypeTriangleList.get(random.nextInt(trueTypeTriangleList.size()));
         }
         else {
+            restrictionsLog = Settings.StarterTypeRestrictions.WEAK_TRIANGLE;
             ret = allTypeTriangles.get(random.nextInt(allTypeTriangles.size()));
         }
 
