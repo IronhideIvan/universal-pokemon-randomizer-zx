@@ -1129,10 +1129,15 @@ public class Randomizer {
         }
 
         List<Pokemon> starters = startersRandomizer.getPickedStarters();
-        int i = 1;
-        for (Pokemon starter: starters) {
-            log.println("Set starter " + i + " to " + starter.fullName());
-            i++;
+        int[] customStarters = settings.getCustomStarters();
+        for(int i = 0; i < starters.size(); ++i) {
+            Pokemon starter = starters.get(i);
+            if(settings.getStartersMod() == Settings.StartersMod.CUSTOM && customStarters[i] < 0) {
+                log.println("Set starter " + (i + 1) + " to " + starter.fullName() + " (RANDOM)");
+            }
+            else {
+                log.println("Set starter " + (i + 1) + " to " + starter.fullName());
+            }
         }
         log.println();
     }

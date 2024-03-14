@@ -35,56 +35,60 @@ public class StartersRandomizer {
     }
 
     public void customStarters() {
-        boolean abilitiesUnchanged = settings.getAbilitiesMod() == Settings.AbilitiesMod.UNCHANGED;
         int[] customStarters = settings.getCustomStarters();
-        boolean allowAltFormes = settings.isAllowStarterAltFormes();
-        boolean banIrregularAltFormes = settings.isBanIrregularAltFormes();
+        pickedStarters = new ArrayList<>();
 
-        List<Pokemon> romPokemon = romHandler.getPokemonInclFormes()
-                .stream()
-                .filter(pk -> pk == null || !pk.actuallyCosmetic)
-                .collect(Collectors.toList());
+        List<Pokemon> starterOptionsList = getStarterOptionsList();
+
+        List<Pokemon> allPokemon = settings.isAllowStarterAltFormes()
+                ? pokemonService.getAllPokemonInclFormesWithoutNull()
+                : pokemonService.getAllPokemonWithoutNull();
+
+        Map<Integer, Pokemon> allPokemonMap = new TreeMap<>();
+        for(Pokemon p: allPokemon) {
+            if(p.actuallyCosmetic) {
+                continue;
+            }
+
+            if(!allPokemonMap.containsKey(p.number)) {
+                allPokemonMap.put(p.number, p);
+            }
+        }
 
         List<Pokemon> banned = getBannedStarters();
 
-        // loop to add chosen pokemon to banned, preventing it from being a random option.
-        for (int i = 0; i < customStarters.length; i = i + 1){
-            if (!(customStarters[i] - 1 == 0)){
-                banned.add(romPokemon.get(customStarters[i] - 1));
-            }
-        }
-        if (customStarters[0] - 1 == 0){
-            Pokemon pkmn = allowAltFormes ? pokemonService.getRandomPokemonInclFormes() : pokemonService.getRandomPokemon();
+        if (customStarters[0] < 0){
+            Pokemon pkmn = getRandomStarter(starterOptionsList, null);
             while (pickedStarters.contains(pkmn) || banned.contains(pkmn) || pkmn.actuallyCosmetic) {
-                pkmn = allowAltFormes ? pokemonService.getRandomPokemonInclFormes() : pokemonService.getRandomPokemon();
+                pkmn = getRandomStarter(starterOptionsList, null);
             }
             pickedStarters.add(pkmn);
         } else {
-            Pokemon pkmn1 = romPokemon.get(customStarters[0] - 1);
+            Pokemon pkmn1 = allPokemonMap.get(customStarters[0]);
             pickedStarters.add(pkmn1);
         }
-        if (customStarters[1] - 1 == 0){
-            Pokemon pkmn = allowAltFormes ? pokemonService.getRandomPokemonInclFormes() : pokemonService.getRandomPokemon();
+        if (customStarters[1] < 0){
+            Pokemon pkmn = getRandomStarter(starterOptionsList, null);
             while (pickedStarters.contains(pkmn) || banned.contains(pkmn) || pkmn.actuallyCosmetic) {
-                pkmn = allowAltFormes ? pokemonService.getRandomPokemonInclFormes() : pokemonService.getRandomPokemon();
+                pkmn = getRandomStarter(starterOptionsList, null);
             }
             pickedStarters.add(pkmn);
         } else {
-            Pokemon pkmn2 = romPokemon.get(customStarters[1] - 1);
+            Pokemon pkmn2 = allPokemonMap.get(customStarters[1]);
             pickedStarters.add(pkmn2);
         }
 
         if (romHandler.isYellow()) {
             romHandler.setStarters(pickedStarters);
         } else {
-            if (customStarters[2] - 1 == 0){
-                Pokemon pkmn = allowAltFormes ? pokemonService.getRandomPokemonInclFormes() : pokemonService.getRandomPokemon();
+            if (customStarters[2] < 0){
+                Pokemon pkmn  = getRandomStarter(starterOptionsList, null);
                 while (pickedStarters.contains(pkmn) || banned.contains(pkmn) || pkmn.actuallyCosmetic) {
-                    pkmn = allowAltFormes ? pokemonService.getRandomPokemonInclFormes() : pokemonService.getRandomPokemon();
+                    pkmn = getRandomStarter(starterOptionsList, null);
                 }
                 pickedStarters.add(pkmn);
             } else {
-                Pokemon pkmn3 = romPokemon.get(customStarters[2] - 1);
+                Pokemon pkmn3 = allPokemonMap.get(customStarters[2]);
                 pickedStarters.add(pkmn3);
             }
             if (romHandler.starterCount() > 3) {
@@ -187,7 +191,8 @@ public class StartersRandomizer {
     private List<Pokemon> getStarterOptionsList() {
         List<Pokemon> banned = getBannedStarters();
         List<Pokemon> optionList = null;
-        if(settings.getStartersMod() == Settings.StartersMod.COMPLETELY_RANDOM) {
+        if(settings.getStartersMod() == Settings.StartersMod.COMPLETELY_RANDOM
+            || settings.getStartersMod() == Settings.StartersMod.CUSTOM) {
             optionList = settings.isAllowStarterAltFormes()
                     ? pokemonService.getAllPokemonInclFormesWithoutNull()
                     : pokemonService.getAllPokemonWithoutNull();
@@ -215,14 +220,35 @@ public class StartersRandomizer {
         if (banIrregularAltFormes) {
             banned.addAll(romHandler.getIrregularFormes());
         }
-        if(settings.isForceMonotypeStarters()) {
-            List<Pokemon> allPokes = pokemonService.getAllPokemonInclFormesWithoutNull();
-            for(Pokemon p: allPokes) {
-                if(p.secondaryType != null) {
-                    banned.add(p);
+
+        List<Pokemon> allPokes = pokemonService.getAllPokemonInclFormesWithoutNull();
+        int[] customStarters = null;
+        if(settings.getStartersMod() == Settings.StartersMod.CUSTOM) {
+            customStarters = settings.getCustomStarters();
+        }
+        for(Pokemon p: allPokes) {
+            if(settings.isForceMonotypeStarters() && p.secondaryType != null) {
+                banned.add(p);
+                continue;
+            }
+
+            if(customStarters != null) {
+                boolean isAdded = false;
+                for(int i = 0; i < customStarters.length; ++i) {
+                    int starterNum = customStarters[i];
+                    if(starterNum >= 0 && p.number == starterNum) {
+                        banned.add(p);
+                        isAdded = true;
+                        break;
+                    }
+                }
+                if(isAdded) {
+                    continue;
                 }
             }
         }
+
+        // settings.getCustomStarters()
         return banned;
     }
 

@@ -93,9 +93,9 @@ public class NewRandomizerGUI {
     private JRadioButton spCustomRadioButton;
     private JRadioButton spRandomCompletelyRadioButton;
     private JRadioButton spRandomTwoEvosRadioButton;
-    private JComboBox<String> spComboBox1;
-    private JComboBox<String> spComboBox2;
-    private JComboBox<String> spComboBox3;
+    private JComboBox<PokemonComboBoxModel> spComboBox1;
+    private JComboBox<PokemonComboBoxModel> spComboBox2;
+    private JComboBox<PokemonComboBoxModel> spComboBox3;
     private JCheckBox spRandomizeStarterHeldItemsCheckBox;
     private JCheckBox spBanBadItemsCheckBox;
     private JRadioButton stpUnchangedRadioButton;
@@ -1535,9 +1535,30 @@ public class NewRandomizerGUI {
         spRestrictionsForceMonotypeCheckbox.setSelected(settings.isForceMonotypeStarters());
 
         int[] customStarters = settings.getCustomStarters();
-        spComboBox1.setSelectedIndex(customStarters[0] - 1);
-        spComboBox2.setSelectedIndex(customStarters[1] - 1);
-        spComboBox3.setSelectedIndex(customStarters[2] - 1);
+        int[] comboStarterIndex = new int[customStarters.length];
+        for (int i = 0; i < customStarters.length; ++i) {
+            if(customStarters[i] < 0) {
+                comboStarterIndex[i] = 0;
+                continue;
+            }
+
+            // Each combo box should have the exact same model under the hood, so it shouldn't matter
+            // which model we check.
+            for(int modelIndex = 0; modelIndex < spComboBox1.getModel().getSize(); ++modelIndex) {
+                PokemonComboBoxModel model = spComboBox1.getItemAt(modelIndex);
+                if(model.pokemon == null) {
+                    continue;
+                }
+
+                if(model.pokemon.number == customStarters[i]) {
+                    comboStarterIndex[i] = modelIndex;
+                }
+            }
+        }
+
+        spComboBox1.setSelectedIndex(comboStarterIndex[0]);
+        spComboBox2.setSelectedIndex(comboStarterIndex[1]);
+        spComboBox3.setSelectedIndex(comboStarterIndex[2]);
 
         peUnchangedRadioButton.setSelected(settings.getEvolutionsMod() == Settings.EvolutionsMod.UNCHANGED);
         peRandomRadioButton.setSelected(settings.getEvolutionsMod() == Settings.EvolutionsMod.RANDOM);
@@ -1797,8 +1818,16 @@ public class NewRandomizerGUI {
 
         settings.setForceMonotypeStarters(spRestrictionsForceMonotypeCheckbox.isSelected());
 
-        int[] customStarters = new int[] { spComboBox1.getSelectedIndex() + 1,
-                spComboBox2.getSelectedIndex() + 1, spComboBox3.getSelectedIndex() + 1 };
+        int[] customStarters = new int[3];
+        PokemonComboBoxModel pokemonComboBoxModel = spComboBox1.getItemAt(spComboBox1.getSelectedIndex());
+        customStarters[0] = pokemonComboBoxModel.pokemon != null ? pokemonComboBoxModel.pokemon.number : -1;
+
+        pokemonComboBoxModel = spComboBox2.getItemAt(spComboBox2.getSelectedIndex());
+        customStarters[1] = pokemonComboBoxModel.pokemon != null ? pokemonComboBoxModel.pokemon.number : -1;
+
+        pokemonComboBoxModel = spComboBox3.getItemAt(spComboBox3.getSelectedIndex());
+        customStarters[2] = pokemonComboBoxModel.pokemon != null ? pokemonComboBoxModel.pokemon.number : -1;
+
         settings.setCustomStarters(customStarters);
 
         settings.setEvolutionsMod(peUnchangedRadioButton.isSelected(), peRandomRadioButton.isSelected(), peRandomEveryLevelRadioButton.isSelected());
@@ -2238,15 +2267,15 @@ public class NewRandomizerGUI {
         spComboBox1.setVisible(true);
         spComboBox1.setEnabled(false);
         spComboBox1.setSelectedIndex(0);
-        spComboBox1.setModel(new DefaultComboBoxModel<>(new String[] { "--" }));
+        spComboBox1.setModel(new DefaultComboBoxModel<>(new PokemonComboBoxModel[] { new PokemonComboBoxModel("--") }));
         spComboBox2.setVisible(true);
         spComboBox2.setEnabled(false);
         spComboBox2.setSelectedIndex(0);
-        spComboBox2.setModel(new DefaultComboBoxModel<>(new String[] { "--" }));
+        spComboBox2.setModel(new DefaultComboBoxModel<>(new PokemonComboBoxModel[] { new PokemonComboBoxModel("--") }));
         spComboBox3.setVisible(true);
         spComboBox3.setEnabled(false);
         spComboBox3.setSelectedIndex(0);
-        spComboBox3.setModel(new DefaultComboBoxModel<>(new String[] { "--" }));
+        spComboBox3.setModel(new DefaultComboBoxModel<>(new PokemonComboBoxModel[] { new PokemonComboBoxModel("--") }));
         spRandomizeStarterHeldItemsCheckBox.setVisible(true);
         spRandomizeStarterHeldItemsCheckBox.setEnabled(false);
         spRandomizeStarterHeldItemsCheckBox.setSelected(false);
@@ -3969,7 +3998,7 @@ public class NewRandomizerGUI {
                                 .collect(Collectors.toList()) :
                         romHandler.getPokemon());
 
-        String[] pokeNames = new String[allPokes.size()];
+        PokemonComboBoxModel[] pokeModels = new PokemonComboBoxModel[allPokes.size()];
 
         allPokes.sort((p1, p2) -> {
             if (p1 == null) {
@@ -3987,18 +4016,17 @@ public class NewRandomizerGUI {
             return Collator.getInstance().compare(p1.fullName(), p2.fullName());
         });
 
-        pokeNames[0] = "Random";
+        pokeModels[0] = new PokemonComboBoxModel("Random");
         for (int i = 1; i < allPokes.size(); i++) {
-            pokeNames[i] = allPokes.get(i).fullName();
-
+            pokeModels[i] = new PokemonComboBoxModel(allPokes.get(i));
         }
 
-        spComboBox1.setModel(new DefaultComboBoxModel<>(pokeNames));
+        spComboBox1.setModel(new DefaultComboBoxModel<>(pokeModels));
         spComboBox1.setSelectedIndex(allPokes.indexOf(currentStarters.get(0)));
-        spComboBox2.setModel(new DefaultComboBoxModel<>(pokeNames));
+        spComboBox2.setModel(new DefaultComboBoxModel<>(pokeModels));
         spComboBox2.setSelectedIndex(allPokes.indexOf(currentStarters.get(1)));
         if (!romHandler.isYellow()) {
-            spComboBox3.setModel(new DefaultComboBoxModel<>(pokeNames));
+            spComboBox3.setModel(new DefaultComboBoxModel<>(pokeModels));
             spComboBox3.setSelectedIndex(allPokes.indexOf(currentStarters.get(2)));
         }
 
@@ -4224,6 +4252,32 @@ public class NewRandomizerGUI {
 
     private boolean isTrainerSetting(int setting) {
         return trainerSettings.indexOf(tpComboBox.getSelectedItem()) == setting;
+    }
+
+    private class PokemonComboBoxModel {
+        public Pokemon pokemon;
+        public String displayText;
+
+        public PokemonComboBoxModel(String displayText) {
+            this.displayText = displayText;
+        }
+
+        public PokemonComboBoxModel(Pokemon pokemon) {
+            this.pokemon = pokemon;
+        }
+
+        @Override
+        public String toString() {
+            if(displayText != null) {
+                return displayText;
+            }
+            else if (pokemon != null) {
+                return pokemon.fullName();
+            }
+            else{
+                return "";
+            }
+        }
     }
 
     public static void main(String[] args) {
