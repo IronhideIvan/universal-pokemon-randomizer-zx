@@ -714,13 +714,6 @@ public class Settings {
 
         int[] tempStarters = new int[] { FileFunctions.read2ByteInt(data, 5),
                 FileFunctions.read2ByteInt(data, 7), FileFunctions.read2ByteInt(data, 9) };
-        // Kluge to handle write2ByteInt not properly handling negative numbers. If there ever needs to be more, then
-        // I can look at a more concrete solution. As it stands I think this is an exceptional case.
-        for(int i = 0; i < tempStarters.length; ++i) {
-            if(tempStarters[i] == 65535) {
-                tempStarters[i] = -1;
-            }
-        }
         settings.setCustomStarters(tempStarters);
 
 
@@ -1001,7 +994,7 @@ public class Settings {
         }
         List<Pokemon> romStarters = rh.getStarters();
         for (int starter = 0; starter < 3; starter++) {
-            if (this.customStarters[starter] < -1 || this.customStarters[starter] >= romPokemon.size()) {
+            if (this.customStarters[starter] < 0 || this.customStarters[starter] >= romPokemon.size()) {
                 // invalid starter for this game
                 feedback.setChangedStarter(true);
                 if (starter >= romStarters.size()) {

@@ -57,7 +57,7 @@ public class StartersRandomizer {
 
         List<Pokemon> banned = getBannedStarters();
 
-        if (customStarters[0] < 0){
+        if (customStarters[0] <= 0){
             Pokemon pkmn = getRandomStarter(starterOptionsList, null);
             while (pickedStarters.contains(pkmn) || banned.contains(pkmn) || pkmn.actuallyCosmetic) {
                 pkmn = getRandomStarter(starterOptionsList, null);
@@ -67,7 +67,7 @@ public class StartersRandomizer {
             Pokemon pkmn1 = allPokemonMap.get(customStarters[0]);
             pickedStarters.add(pkmn1);
         }
-        if (customStarters[1] < 0){
+        if (customStarters[1] <= 0){
             Pokemon pkmn = getRandomStarter(starterOptionsList, null);
             while (pickedStarters.contains(pkmn) || banned.contains(pkmn) || pkmn.actuallyCosmetic) {
                 pkmn = getRandomStarter(starterOptionsList, null);
@@ -81,7 +81,7 @@ public class StartersRandomizer {
         if (romHandler.isYellow()) {
             romHandler.setStarters(pickedStarters);
         } else {
-            if (customStarters[2] < 0){
+            if (customStarters[2] <= 0){
                 Pokemon pkmn  = getRandomStarter(starterOptionsList, null);
                 while (pickedStarters.contains(pkmn) || banned.contains(pkmn) || pkmn.actuallyCosmetic) {
                     pkmn = getRandomStarter(starterOptionsList, null);

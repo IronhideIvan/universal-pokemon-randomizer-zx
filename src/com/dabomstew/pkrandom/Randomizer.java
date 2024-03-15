@@ -1133,7 +1133,7 @@ public class Randomizer {
         int[] customStarters = settings.getCustomStarters();
         for(int i = 0; i < starters.size(); ++i) {
             Pokemon starter = starters.get(i);
-            if(settings.getStartersMod() == Settings.StartersMod.CUSTOM && customStarters[i] < 0) {
+            if(settings.getStartersMod() == Settings.StartersMod.CUSTOM && customStarters[i] <= 0) {
                 log.println("Set starter " + (i + 1) + " to " + starter.fullName() + " (RANDOM)");
             }
             else {

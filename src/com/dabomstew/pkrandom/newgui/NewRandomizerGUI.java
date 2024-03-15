@@ -1537,7 +1537,7 @@ public class NewRandomizerGUI {
         int[] customStarters = settings.getCustomStarters();
         int[] comboStarterIndex = new int[customStarters.length];
         for (int i = 0; i < customStarters.length; ++i) {
-            if(customStarters[i] < 0) {
+            if(customStarters[i] <= 0) {
                 comboStarterIndex[i] = 0;
                 continue;
             }
@@ -1552,6 +1552,7 @@ public class NewRandomizerGUI {
 
                 if(model.pokemon.number == customStarters[i]) {
                     comboStarterIndex[i] = modelIndex;
+                    break;
                 }
             }
         }
@@ -1820,13 +1821,13 @@ public class NewRandomizerGUI {
 
         int[] customStarters = new int[3];
         PokemonComboBoxModel pokemonComboBoxModel = spComboBox1.getItemAt(spComboBox1.getSelectedIndex());
-        customStarters[0] = pokemonComboBoxModel.pokemon != null ? pokemonComboBoxModel.pokemon.number : -1;
+        customStarters[0] = pokemonComboBoxModel.pokemon != null ? pokemonComboBoxModel.pokemon.number : 0;
 
         pokemonComboBoxModel = spComboBox2.getItemAt(spComboBox2.getSelectedIndex());
-        customStarters[1] = pokemonComboBoxModel.pokemon != null ? pokemonComboBoxModel.pokemon.number : -1;
+        customStarters[1] = pokemonComboBoxModel.pokemon != null ? pokemonComboBoxModel.pokemon.number : 0;
 
         pokemonComboBoxModel = spComboBox3.getItemAt(spComboBox3.getSelectedIndex());
-        customStarters[2] = pokemonComboBoxModel.pokemon != null ? pokemonComboBoxModel.pokemon.number : -1;
+        customStarters[2] = pokemonComboBoxModel.pokemon != null ? pokemonComboBoxModel.pokemon.number : 0;
 
         settings.setCustomStarters(customStarters);
 
