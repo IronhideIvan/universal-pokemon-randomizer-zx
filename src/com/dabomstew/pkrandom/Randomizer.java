@@ -628,15 +628,15 @@ public class Randomizer {
 
         if (wildsChanged) {
             if (settings.getWildPokemonMod() == Settings.WildPokemonMod.VANILLA_THEMED) {
-                // encounterRandomizer.logVanillaEncountersMap(log);
+                encounterRandomizer.logVanillaEncountersMap(log);
             }
 
             logWildPokemonChanges(log);
+
+            logUnobtainableWildPokemon(log, encounterService);
         } else {
             log.println("Wild Pokemon: Unchanged." + NEWLINE);
         }
-
-        logUnobtainableWildPokemon(log, encounterService);
 
         boolean useTimeBasedEncounters = settings.isUseTimeBasedEncounters() ||
                 (settings.getWildPokemonMod() == Settings.WildPokemonMod.UNCHANGED && settings.isWildLevelsModified());

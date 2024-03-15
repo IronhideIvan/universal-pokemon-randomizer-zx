@@ -63,132 +63,6 @@ public class EncounterRandomizer {
 
         // The min pool may be configurable, but for now lets leave it in the code.
         int poolSize = 3;
-        for(Pokemon ogPoke: allPokemon) {
-            // Find all pokemon with a similar level and type as this one.
-            int ogPowerLevel = ogPoke.bstForPowerLevels();
-            List<Pokemon> possibleTranslations = findSimilarPokemon(ogPowerLevel, ogPoke.primaryType, poolSize, sortedOptionsList);
-
-            List<Pokemon> choiceList = new ArrayList<>();
-            // We have more than we want
-            if(possibleTranslations.size() > poolSize) {
-                // If we have a pool that's larger than our limit, we need to pick only our maximum amount.
-                while (choiceList.size() < poolSize) {
-                    int choiceIndex = random.nextInt(possibleTranslations.size());
-                    choiceList.add(possibleTranslations.get(choiceIndex));
-                    possibleTranslations.remove(choiceIndex);
-                }
-            }
-            // We have fewer than we want
-            else if (possibleTranslations.size() < poolSize) {
-
-                // Find any pokemon of a similar power level to add to our pool, using the pokemon's secondary type, if any.
-                List<Pokemon> tempList;
-                if(ogPoke.secondaryType != null) {
-                    tempList = findSimilarPokemon(ogPowerLevel, ogPoke.secondaryType, poolSize, sortedOptionsList);
-                    tempList.removeIf(o -> possibleTranslations.contains((Pokemon) o));
-
-                    if(tempList.size() + possibleTranslations.size() > poolSize) {
-                        while (possibleTranslations.size() < poolSize) {
-                            int choiceIndex = random.nextInt(tempList.size());
-                            possibleTranslations.add(tempList.get(choiceIndex));
-                            tempList.remove(choiceIndex);
-                        }
-                    }
-                    else{
-                        possibleTranslations.addAll(tempList);
-                    }
-                }
-
-                if(possibleTranslations.size() < poolSize) {
-                    tempList = findSimilarPokemon(ogPowerLevel, null, poolSize, sortedOptionsList);
-                    tempList.removeIf(o -> possibleTranslations.contains((Pokemon) o));
-
-                    if(tempList.size() + possibleTranslations.size() > poolSize) {
-                        while (possibleTranslations.size() < poolSize) {
-                            int choiceIndex = random.nextInt(tempList.size());
-                            possibleTranslations.add(tempList.get(choiceIndex));
-                            tempList.remove(choiceIndex);
-                        }
-                    }
-                    else{
-                        possibleTranslations.addAll(tempList);
-                    }
-                }
-
-                if(possibleTranslations.size() > poolSize) {
-                    while (choiceList.size() < poolSize) {
-                        int choiceIndex = random.nextInt(possibleTranslations.size());
-                        choiceList.add(possibleTranslations.get(choiceIndex));
-                        possibleTranslations.remove(choiceIndex);
-                    }
-                } else {
-                    choiceList.addAll(possibleTranslations);
-                }
-
-                // This would happen if a pokemon has some crazy randomized stats or if the pokemon itself is banned
-                // so we need to find the nearest neighbors of this pokemon's power and add those.
-                if(choiceList.isEmpty()) {
-
-                    int whereWouldIBeIndex = 0;
-                    while(whereWouldIBeIndex < sortedOptionsList.size()) {
-                        Pokemon testPoke = sortedOptionsList.get(whereWouldIBeIndex);
-
-                        if(ogPowerLevel < testPoke.bstForPowerLevels()) {
-                            // We found our closest-in-power pokemon.
-                            break;
-                        }
-
-                        ++whereWouldIBeIndex;
-                    }
-
-                    // We are the weakest thing in the list, so
-                    // grab the first few pokemon.
-                    if(whereWouldIBeIndex == 0) {
-                        for(int i = 0; i < poolSize; ++i) {
-                            choiceList.add(sortedOptionsList.get(i));
-                        }
-                    }
-                    // We are too strong, grab the strongest few pokemon
-                    else if (whereWouldIBeIndex == sortedOptionsList.size()) {
-                        for(int i = 0; i < poolSize; ++i) {
-                            choiceList.add(sortedOptionsList.get(sortedOptionsList.size() - i - 1));
-                        }
-                    }
-                    // Grab a few stronger and weaker pokemon
-                    else {
-                        int halfMinCount = poolSize / 2;
-                        if(halfMinCount * 2 < poolSize) {
-                            ++halfMinCount;
-                        }
-
-                        int numStrongerToFetch = Math.min(sortedOptionsList.size() - whereWouldIBeIndex, halfMinCount);
-                        int numWeakerToFetch = Math.min(whereWouldIBeIndex, halfMinCount);
-                        int sanityCount = 0;
-                        while(sanityCount < 3 && numStrongerToFetch + numWeakerToFetch < poolSize) {
-                            numStrongerToFetch = Math.min(sortedOptionsList.size() - whereWouldIBeIndex, numStrongerToFetch + 1);
-                            numWeakerToFetch = Math.min(whereWouldIBeIndex, numWeakerToFetch + 1);
-                            ++sanityCount;
-                        }
-
-                        for(int i = 0; i < numWeakerToFetch; ++i) {
-                            choiceList.add(sortedOptionsList.get(whereWouldIBeIndex - i));
-                        }
-
-                        for(int i = 0; i < numStrongerToFetch; ++i) {
-                            choiceList.add(sortedOptionsList.get(whereWouldIBeIndex + i + 1));
-                        }
-                    }
-                }
-            }
-            // we have just enough
-            else {
-                choiceList.addAll(possibleTranslations);
-            }
-
-            // Shuffle the collection for good measure.
-            Collections.shuffle(choiceList, random);
-            vanillaTranslateMap.put(ogPoke, choiceList);
-        }
 
         // now that we have our options set up. Lets update our encounters
         List<EncounterSet> allEncounters = romHandler.getEncounters(settings.isUseTimeBasedEncounters());
@@ -200,7 +74,12 @@ public class EncounterRandomizer {
             Set<Pokemon> usedAreaPokemon = new TreeSet<>();
             for(Encounter enc: area.encounters) {
                 if(!vanillaTranslateMap.containsKey(enc.pokemon)) {
-                    throw new RandomizationException("Unable to randomize pokemon: " + enc.pokemon.toString());
+                    List<Pokemon> replacements = getVanillaReplacements(enc.pokemon, poolSize, sortedOptionsList);
+                    if(replacements.isEmpty()) {
+                        throw new RandomizationException("Unable to randomize pokemon: " + enc.pokemon.toString());
+                    }
+
+                    vanillaTranslateMap.put(enc.pokemon, replacements);
                 }
 
                 if(areaMappedPokemon.containsKey(enc.pokemon)) {
@@ -242,8 +121,7 @@ public class EncounterRandomizer {
     }
 
     public void logVanillaEncountersMap(PrintStream log) {
-
-        log.println("--- Possible Choices for Each Wild Pokemon ---");
+        log.println("--- Possible Replacements for Each Vanilla Wild Pokemon ---");
 
         if(vanillaTranslateMap == null || vanillaTranslateMap.isEmpty()) {
             log.println("No possible choices created.");
@@ -1227,5 +1105,132 @@ public class EncounterRandomizer {
         }
 
         return similarPokemon;
+    }
+
+    private List<Pokemon> getVanillaReplacements(Pokemon ogPoke, int poolSize, List<Pokemon> sortedOptionsList) {
+        // Find all pokemon with a similar level and type as this one.
+        int ogPowerLevel = ogPoke.bstForPowerLevels();
+        List<Pokemon> possibleTranslations = findSimilarPokemon(ogPowerLevel, ogPoke.primaryType, poolSize, sortedOptionsList);
+
+        List<Pokemon> choiceList = new ArrayList<>();
+        // We have more than we want
+        if(possibleTranslations.size() > poolSize) {
+            // If we have a pool that's larger than our limit, we need to pick only our maximum amount.
+            while (choiceList.size() < poolSize) {
+                int choiceIndex = random.nextInt(possibleTranslations.size());
+                choiceList.add(possibleTranslations.get(choiceIndex));
+                possibleTranslations.remove(choiceIndex);
+            }
+        }
+        // We have fewer than we want
+        else if (possibleTranslations.size() < poolSize) {
+
+            // Find any pokemon of a similar power level to add to our pool, using the pokemon's secondary type, if any.
+            List<Pokemon> tempList;
+            if(ogPoke.secondaryType != null) {
+                tempList = findSimilarPokemon(ogPowerLevel, ogPoke.secondaryType, poolSize, sortedOptionsList);
+                tempList.removeIf(o -> possibleTranslations.contains((Pokemon) o));
+
+                if(tempList.size() + possibleTranslations.size() > poolSize) {
+                    while (possibleTranslations.size() < poolSize) {
+                        int choiceIndex = random.nextInt(tempList.size());
+                        possibleTranslations.add(tempList.get(choiceIndex));
+                        tempList.remove(choiceIndex);
+                    }
+                }
+                else{
+                    possibleTranslations.addAll(tempList);
+                }
+            }
+
+            if(possibleTranslations.size() < poolSize) {
+                tempList = findSimilarPokemon(ogPowerLevel, null, poolSize, sortedOptionsList);
+                tempList.removeIf(o -> possibleTranslations.contains((Pokemon) o));
+
+                if(tempList.size() + possibleTranslations.size() > poolSize) {
+                    while (possibleTranslations.size() < poolSize) {
+                        int choiceIndex = random.nextInt(tempList.size());
+                        possibleTranslations.add(tempList.get(choiceIndex));
+                        tempList.remove(choiceIndex);
+                    }
+                }
+                else{
+                    possibleTranslations.addAll(tempList);
+                }
+            }
+
+            if(possibleTranslations.size() > poolSize) {
+                while (choiceList.size() < poolSize) {
+                    int choiceIndex = random.nextInt(possibleTranslations.size());
+                    choiceList.add(possibleTranslations.get(choiceIndex));
+                    possibleTranslations.remove(choiceIndex);
+                }
+            } else {
+                choiceList.addAll(possibleTranslations);
+            }
+
+            // This would happen if a pokemon has some crazy randomized stats or if the pokemon itself is banned
+            // so we need to find the nearest neighbors of this pokemon's power and add those.
+            if(choiceList.isEmpty()) {
+
+                int whereWouldIBeIndex = 0;
+                while(whereWouldIBeIndex < sortedOptionsList.size()) {
+                    Pokemon testPoke = sortedOptionsList.get(whereWouldIBeIndex);
+
+                    if(ogPowerLevel < testPoke.bstForPowerLevels()) {
+                        // We found our closest-in-power pokemon.
+                        break;
+                    }
+
+                    ++whereWouldIBeIndex;
+                }
+
+                // We are the weakest thing in the list, so
+                // grab the first few pokemon.
+                if(whereWouldIBeIndex == 0) {
+                    for(int i = 0; i < poolSize; ++i) {
+                        choiceList.add(sortedOptionsList.get(i));
+                    }
+                }
+                // We are too strong, grab the strongest few pokemon
+                else if (whereWouldIBeIndex == sortedOptionsList.size()) {
+                    for(int i = 0; i < poolSize; ++i) {
+                        choiceList.add(sortedOptionsList.get(sortedOptionsList.size() - i - 1));
+                    }
+                }
+                // Grab a few stronger and weaker pokemon
+                else {
+                    int halfMinCount = poolSize / 2;
+                    if(halfMinCount * 2 < poolSize) {
+                        ++halfMinCount;
+                    }
+
+                    int numStrongerToFetch = Math.min(sortedOptionsList.size() - whereWouldIBeIndex, halfMinCount);
+                    int numWeakerToFetch = Math.min(whereWouldIBeIndex, halfMinCount);
+                    int sanityCount = 0;
+                    while(sanityCount < 3 && numStrongerToFetch + numWeakerToFetch < poolSize) {
+                        numStrongerToFetch = Math.min(sortedOptionsList.size() - whereWouldIBeIndex, numStrongerToFetch + 1);
+                        numWeakerToFetch = Math.min(whereWouldIBeIndex, numWeakerToFetch + 1);
+                        ++sanityCount;
+                    }
+
+                    for(int i = 0; i < numWeakerToFetch; ++i) {
+                        choiceList.add(sortedOptionsList.get(whereWouldIBeIndex - i));
+                    }
+
+                    for(int i = 0; i < numStrongerToFetch; ++i) {
+                        choiceList.add(sortedOptionsList.get(whereWouldIBeIndex + i + 1));
+                    }
+                }
+            }
+        }
+        // we have just enough
+        else {
+            choiceList.addAll(possibleTranslations);
+        }
+
+        // Shuffle the collection for good measure.
+        Collections.shuffle(choiceList, random);
+        return choiceList;
     }
 }
