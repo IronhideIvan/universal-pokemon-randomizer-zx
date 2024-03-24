@@ -595,7 +595,7 @@ public class Randomizer {
         // 1. Update catch rates
         // 2. Randomize Wild Pokemon
 
-        EncounterRandomizer encounterRandomizer = new EncounterRandomizer(random, settings, romHandler, pokemonService);
+        EncounterRandomizer encounterRandomizer = new EncounterRandomizer(random, settings, romHandler, pokemonService, typeService);
 
         if (settings.isUseMinimumCatchRate()) {
             romHandler.changeCatchRates(settings);

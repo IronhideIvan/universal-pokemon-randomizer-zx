@@ -28,9 +28,9 @@ that isn't inuitively known. For example, I want to know what pokemon are unobta
 of what I'm physically unable to find if there's a pokemon I really want to have in a playthrough.
 6. __"Thematic" wild encounters__. I'm not a fan of total randomness, I just don't find it fun. As such, I created an option
 which tries to keep wild encounters thematically similar to what's in the vanilla game. What this boils down to is an Area 1-1 mapping 
-where an encounter in the base game will try to be replaced with a pokemon that:
-   1. Shares a type with the vanilla's primary type.
-   2. Is of a similar power level.
+where an encounter in the base game will try to be replaced with a pokemon that matches the type of pokemon in the area and
+is of a similar power level to the original pokemon. If the original pokemon's types don't match what other pokemon in the area
+have, then the replacement pokemon will try to use the types of the original pokemon only.
 7. __Options for trades to only include rare pokemon__. In other words, trades will try to request pokemon that are difficult, but not impossible,
 to obtain in the wild. At the same time, trades will offer pokemon that are rare or unobtainable in the wild. This gives trades the opportunity to be a 
 bit more fun and worthwhile to pursue.

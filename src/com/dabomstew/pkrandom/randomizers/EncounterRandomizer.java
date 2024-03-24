@@ -5,7 +5,7 @@ import com.dabomstew.pkrandom.exceptions.RandomizationException;
 import com.dabomstew.pkrandom.pokemon.*;
 import com.dabomstew.pkrandom.romhandlers.RomHandler;
 import com.dabomstew.pkrandom.services.PokemonService;
-import jdk.jshell.EvalException;
+import com.dabomstew.pkrandom.services.TypeService;
 
 import java.io.PrintStream;
 import java.util.*;
@@ -13,15 +13,18 @@ import java.util.*;
 public class EncounterRandomizer {
     private final Settings settings;
     private final PokemonService pokemonService;
+    private final TypeService typeService;
     private final RomHandler romHandler;
     private final Random random;
-    private Map<Pokemon, List<Pokemon>> vanillaTranslateMap;
+    private Map<Pokemon, List<Pokemon>> vanillaPrimaryTypeTranslateMap;
+    private Map<Pokemon, List<Pokemon>> vanillaSecondaryTypeTranslateMap;
 
-    public EncounterRandomizer(Random random, Settings settings, RomHandler romHandler, PokemonService pokemonService) {
+    public EncounterRandomizer(Random random, Settings settings, RomHandler romHandler, PokemonService pokemonService, TypeService typeService) {
         this.settings = settings;
         this.pokemonService = pokemonService;
         this.romHandler = romHandler;
         this.random = random;
+        this.typeService = typeService;
     }
 
     public void area1to1Encounters() {
@@ -57,7 +60,8 @@ public class EncounterRandomizer {
         sortedOptionsList.sort(Comparator.comparingInt(Pokemon::bstForPowerLevels));
 
         // First, create a map of all pokemon and their possible replacements.
-        vanillaTranslateMap = new TreeMap<>();
+        vanillaPrimaryTypeTranslateMap = new TreeMap<>();
+        vanillaSecondaryTypeTranslateMap = new TreeMap<>();
 
         List<Pokemon> allPokemon = pokemonService.getAllPokemonInclFormesWithoutNull();
 
@@ -69,24 +73,39 @@ public class EncounterRandomizer {
         if(romHandler.isORAS()) {
             allEncounters = collapseAreasORAS(allEncounters);
         }
+
         for(EncounterSet area: allEncounters) {
             Map<Pokemon, Pokemon> areaMappedPokemon = new TreeMap<>();
             Set<Pokemon> usedAreaPokemon = new TreeSet<>();
             for(Encounter enc: area.encounters) {
-                if(!vanillaTranslateMap.containsKey(enc.pokemon)) {
-                    List<Pokemon> replacements = getVanillaReplacements(enc.pokemon, poolSize, sortedOptionsList);
+                if(!vanillaPrimaryTypeTranslateMap.containsKey(enc.pokemon)) {
+                    List<Pokemon> replacements = getVanillaReplacements(enc.pokemon, enc.pokemon.primaryType, enc.pokemon.secondaryType, poolSize, sortedOptionsList);
                     if(replacements.isEmpty()) {
                         throw new RandomizationException("Unable to randomize pokemon: " + enc.pokemon.toString());
                     }
+                    vanillaPrimaryTypeTranslateMap.put(enc.pokemon, replacements);
 
-                    vanillaTranslateMap.put(enc.pokemon, replacements);
+                    if(enc.pokemon.secondaryType != null) {
+                        replacements = getVanillaReplacements(enc.pokemon, enc.pokemon.secondaryType, enc.pokemon.primaryType, poolSize, sortedOptionsList);
+                        if(replacements.isEmpty()) {
+                            throw new RandomizationException("Unable to randomize pokemon: " + enc.pokemon.toString());
+                        }
+                        vanillaSecondaryTypeTranslateMap.put(enc.pokemon, replacements);
+                    }
                 }
 
                 if(areaMappedPokemon.containsKey(enc.pokemon)) {
                     enc.pokemon = areaMappedPokemon.get(enc.pokemon);
                 }
                 else {
-                    List<Pokemon> options = vanillaTranslateMap.get(enc.pokemon);
+                    Type mostLikelyTypeForEncounter = getMostPopularTypeFromArea(enc.pokemon, area);
+                    List<Pokemon> options;
+                    if(enc.pokemon.secondaryType != null && enc.pokemon.secondaryType == mostLikelyTypeForEncounter) {
+                        options = vanillaSecondaryTypeTranslateMap.get(enc.pokemon);
+                    }
+                    else {
+                        options = vanillaPrimaryTypeTranslateMap.get(enc.pokemon);
+                    }
 
                     boolean isPossibleChoice = false;
                     for (Pokemon p: options) {
@@ -123,28 +142,43 @@ public class EncounterRandomizer {
     public void logVanillaEncountersMap(PrintStream log) {
         log.println("--- Possible Replacements for Each Vanilla Wild Pokemon ---");
 
-        if(vanillaTranslateMap == null || vanillaTranslateMap.isEmpty()) {
+        if(vanillaPrimaryTypeTranslateMap == null || vanillaPrimaryTypeTranslateMap.isEmpty()) {
             log.println("No possible choices created.");
             log.println();
             return;
         }
 
-        List<Pokemon> keyList = new ArrayList<>(vanillaTranslateMap.keySet().stream().toList());
+        List<Pokemon> keyList = new ArrayList<>(vanillaPrimaryTypeTranslateMap.keySet().stream().toList());
         keyList.sort(Comparator.comparingInt((Pokemon a) -> a.number));
         for(Pokemon p: keyList) {
-            log.print("[" + p.number + "]" + p.fullName() + "[bst=" + p.bstForPowerLevels() + ", TYPE=" + p.primaryType);
+            log.print("[" + p.number + "] " + p.fullName() + "[bst=" + p.bstForPowerLevels() + ", TYPE=" + p.primaryType);
             if(p.secondaryType != null) {
                 log.print(", " + p.secondaryType);
             }
             log.println("]");
 
-            List<Pokemon> choiceList = vanillaTranslateMap.get(p);
+            if(vanillaSecondaryTypeTranslateMap != null && vanillaSecondaryTypeTranslateMap.containsKey(p)) {
+                log.println("[" + p.primaryType + "] Options:");
+            }
+            List<Pokemon> choiceList = vanillaPrimaryTypeTranslateMap.get(p);
             for(Pokemon choice: choiceList) {
                 log.print("\t" + choice.fullName() + " [bst=" + choice.bstForPowerLevels() + ", TYPE=" + choice.primaryType);
                 if(choice.secondaryType != null) {
                     log.print(", " + choice.secondaryType);
                 }
                 log.println("]");
+            }
+
+            if(vanillaSecondaryTypeTranslateMap != null && vanillaSecondaryTypeTranslateMap.containsKey(p)) {
+                log.println("[" + p.secondaryType + "] Options:");
+                choiceList = vanillaSecondaryTypeTranslateMap.get(p);
+                for(Pokemon choice: choiceList) {
+                    log.print("\t" + choice.fullName() + " [bst=" + choice.bstForPowerLevels() + ", TYPE=" + choice.primaryType);
+                    if(choice.secondaryType != null) {
+                        log.print(", " + choice.secondaryType);
+                    }
+                    log.println("]");
+                }
             }
 
             log.println();
@@ -1089,6 +1123,7 @@ public class EncounterRandomizer {
         int minPowerLevel = powerLevel - (powerLevel / 10);
         int maxPowerLevel = powerLevel + (powerLevel / 10);
         int maxSearchLoops = 3;
+
         for (int i = 0; similarPokemon.size() < minPool && i < maxSearchLoops; ++i) {
             for(Pokemon possiblePokemon: pickFromList) {
                 if(!similarPokemon.contains(possiblePokemon)
@@ -1107,11 +1142,16 @@ public class EncounterRandomizer {
         return similarPokemon;
     }
 
-    private List<Pokemon> getVanillaReplacements(Pokemon ogPoke, int poolSize, List<Pokemon> sortedOptionsList) {
+    private List<Pokemon> getVanillaReplacements(Pokemon ogPoke, Type typeToCompare, Type backupType, int poolSize, List<Pokemon> sortedOptionsList) {
         // Find all pokemon with a similar level and type as this one.
         int ogPowerLevel = ogPoke.bstForPowerLevels();
-        List<Pokemon> possibleTranslations = findSimilarPokemon(ogPowerLevel, ogPoke.primaryType, poolSize, sortedOptionsList);
 
+        // Lets find more pokemon than we want and reduce to our desired size from there. This way,
+        // if a certain pokemon always returns a perfect pool size we can still have some variation
+        // between randomizations by, for example, picking 3 pokemon from 5 vs always using the same 3.
+        int searchPoolSize = poolSize + 2;
+
+        List<Pokemon> possibleTranslations = findSimilarPokemon(ogPowerLevel, typeToCompare, searchPoolSize, sortedOptionsList);
         List<Pokemon> choiceList = new ArrayList<>();
         // We have more than we want
         if(possibleTranslations.size() > poolSize) {
@@ -1127,8 +1167,8 @@ public class EncounterRandomizer {
 
             // Find any pokemon of a similar power level to add to our pool, using the pokemon's secondary type, if any.
             List<Pokemon> tempList;
-            if(ogPoke.secondaryType != null) {
-                tempList = findSimilarPokemon(ogPowerLevel, ogPoke.secondaryType, poolSize, sortedOptionsList);
+            if(backupType != null) {
+                tempList = findSimilarPokemon(ogPowerLevel, backupType, searchPoolSize, sortedOptionsList);
                 tempList.removeIf(o -> possibleTranslations.contains((Pokemon) o));
 
                 if(tempList.size() + possibleTranslations.size() > poolSize) {
@@ -1144,7 +1184,7 @@ public class EncounterRandomizer {
             }
 
             if(possibleTranslations.size() < poolSize) {
-                tempList = findSimilarPokemon(ogPowerLevel, null, poolSize, sortedOptionsList);
+                tempList = findSimilarPokemon(ogPowerLevel, null, searchPoolSize, sortedOptionsList);
                 tempList.removeIf(o -> possibleTranslations.contains((Pokemon) o));
 
                 if(tempList.size() + possibleTranslations.size() > poolSize) {
@@ -1232,5 +1272,61 @@ public class EncounterRandomizer {
         // Shuffle the collection for good measure.
         Collections.shuffle(choiceList, random);
         return choiceList;
+    }
+
+    public Type getMostPopularTypeFromArea(Pokemon poke, EncounterSet area) {
+        // First, compile what types are present in this area
+        Map<Type, Integer> allTypeCounts = new TreeMap<>();
+        for(Encounter enc: area.encounters) {
+            int count = 1;
+            if(allTypeCounts.containsKey(enc.pokemon.primaryType)) {
+                count += allTypeCounts.get(enc.pokemon.primaryType);
+            }
+            allTypeCounts.put(enc.pokemon.primaryType, count);
+
+            if(enc.pokemon.secondaryType != null) {
+                count = 1;
+                if(allTypeCounts.containsKey(enc.pokemon.secondaryType)) {
+                    count += allTypeCounts.get(enc.pokemon.secondaryType);
+                }
+                allTypeCounts.put(enc.pokemon.secondaryType, count);
+            }
+        }
+
+        // Now, determine what the most common type is. If there is a tie, choose randomly between the two as far as which
+        // to keep.
+        List<Type> mostPopularTypes = new ArrayList<>();
+        List<Type> allTypes = typeService.getAllTypesInGame();
+        int maxTypeCount = -1;
+        for(Type typeInGame: allTypes) {
+            if(!allTypeCounts.containsKey(typeInGame)) {
+                continue;
+            }
+
+            int total = allTypeCounts.get(typeInGame);
+            if(total == maxTypeCount) {
+                mostPopularTypes.add(typeInGame);
+            }
+            else if(total > maxTypeCount) {
+                maxTypeCount = total;
+                mostPopularTypes.clear();
+                mostPopularTypes.add(typeInGame);
+            }
+        }
+
+        Type retType = mostPopularTypes.size() > 1 ?
+                mostPopularTypes.get(random.nextInt(mostPopularTypes.size()))
+                : mostPopularTypes.getFirst();
+
+        // In case of any ties, the pokemon's primary type takes precedence at the most popular type.
+        // The reasoning behind this is situations where a pokemon like Tentacool and Tentacruel are the
+        // only pokemon in a surf area. It makes more sense to replace the pokemon with a Water type vs
+        // a Poison type. This is not foolproof, but will probably catch the majority of cases.
+        if(mostPopularTypes.size() > 1
+                && mostPopularTypes.stream().anyMatch(t -> t == poke.primaryType)) {
+            retType = poke.primaryType;
+        }
+
+        return retType;
     }
 }
